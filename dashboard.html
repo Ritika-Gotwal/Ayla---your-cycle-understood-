@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Ayla — your cycle, understood</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="page page--dashboard">
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="topbar topbar--app" role="banner">
+      <div class="topbar__inner topbar__inner--app">
+        <div class="topbar__brand">
+          <div class="brand" aria-label="Ayla">
+            <div class="brand__mark" aria-hidden="true">
+              <svg class="ayla-logo" viewBox="0 0 48 48" role="img" focusable="false" aria-hidden="true">
+                <!-- Cycle ring -->
+                <path class="ayla-logo__ring" d="M13.2 24c0-6 4.8-10.8 10.8-10.8 3.7 0 7 1.8 9 4.7" />
+                <path class="ayla-logo__ring ayla-logo__ring--soft" d="M34.8 24c0 6-4.8 10.8-10.8 10.8-3.7 0-7-1.8-9-4.7" />
+
+                <!-- Crescent -->
+                <path class="ayla-logo__crescent" d="M29.6 17.1a8.4 8.4 0 1 0 0 13.8 7.1 7.1 0 1 1 0-13.8Z" />
+
+                <!-- Petal -->
+                <path class="ayla-logo__petal" d="M18.2 27.2c.7-2.9 2.8-5.1 6.2-6.5-.2 3.7-1.6 6.2-4.4 7.8-1.1.6-2.4.9-3.9.9.8-.6 1.4-1.3 2.1-2.2Z" />
+
+                <!-- Gentle wave -->
+                <path class="ayla-logo__wave" d="M16.2 30.3c2.5-3.5 5.3-5.1 7.9-5.1 2.7 0 4.6 1.8 7.4 1.8 1.7 0 3.2-.6 4.6-1.8" />
+
+                <!-- Spark -->
+                <path class="ayla-logo__spark" d="M35.8 14.6l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6Z" />
+              </svg>
+            </div>
+            <div class="brand__text">
+              <div class="brand__name">Ayla</div>
+              <div class="brand__tagline">your cycle, understood</div>
+            </div>
+          </div>
+        </div>
+
+        <nav class="app-nav" id="appNav" aria-label="Main navigation">
+          <button class="app-nav__tab" type="button" data-route="home" aria-current="page">Home</button>
+          <button class="app-nav__tab" type="button" data-route="calendar">Calendar</button>
+          <button class="app-nav__tab" type="button" data-route="insights">Insights</button>
+          <button class="app-nav__tab" type="button" data-route="food">Food</button>
+          <button class="app-nav__tab" type="button" data-route="movement">Movement</button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="dashboard-shell" role="main" data-active-view="home">
+      <!-- HOME: immersive ring + energy only (100vh shell with global footer) -->
+      <section class="app-view app-view--home app-view--immerse" id="view-home" aria-label="Home">
+        <div class="home-immerse">
+          <div class="home-hero-composition">
+            <header class="home-hero-composition__greet">
+              <h1 class="home-greeting h2" id="greeting">Hi</h1>
+              <p class="home-emotion subtle" id="todayLine">A gentle place to check in.</p>
+            </header>
+
+            <div class="home-immerse__hero" aria-label="Your cycle today">
+              <article class="immerse-cycle card card--immerse">
+                <span class="immerse-cycle__eyebrow micro">Today</span>
+                <button
+                  type="button"
+                  class="immerse-cycle__ring-btn"
+                  id="heroCycleBtn"
+                  aria-label="Open cycle details and settings"
+                >
+                  <span class="cycle-ring-lg home-ring home-ring--hero" aria-hidden="true">
+                    <svg class="cycle-ring-lg__svg" id="heroCycleRing" viewBox="0 0 220 220" role="img" focusable="false"></svg>
+                    <span class="cycle-ring-lg__center cycle-ring-lg__center--hero">
+                      <span class="visually-hidden">Cycle day</span>
+                      <span class="cycle-ring-lg__day cycle-ring-lg__day--hero" id="heroRingDay">—</span>
+                    </span>
+                  </span>
+                </button>
+                <p class="immerse-cycle__phase" id="heroDayPhaseLine">Day — · —</p>
+                <p class="immerse-cycle__whisper micro subtle" id="homeCycleWhisper" hidden></p>
+              </article>
+
+              <article class="immerse-energy card card--immerse">
+                <div class="immerse-energy__head">
+                  <div class="immerse-energy__head-text">
+                    <h2 class="immerse-energy__title">Energy</h2>
+                    <p class="immerse-energy__subtitle subtle" id="homeEnergySubtitle">Log your cycle to see the curve</p>
+                  </div>
+                  <span class="immerse-energy__badge" id="homeEnergyBadge" aria-label="Energy tendency">—</span>
+                </div>
+                <button type="button" class="immerse-energy__chart-btn" id="heroEnergyBtn" aria-label="Open energy analytics">
+                  <span class="energy-card__chart energy-card__chart--hero" id="heroEnergyChartWrap">
+                    <svg
+                      class="energy-card__svg"
+                      id="heroEnergyWave"
+                      viewBox="0 0 720 120"
+                      role="img"
+                      focusable="false"
+                      aria-hidden="true"
+                    ></svg>
+                    <div class="wave-tooltip wave-tooltip--hero" id="heroWaveTooltip" role="status" aria-live="polite" hidden></div>
+                  </span>
+                </button>
+                <div class="immerse-energy__axis micro subtle" aria-hidden="true">
+                  <span>Low</span>
+                  <span class="immerse-energy__axis-spacer"></span>
+                  <span>High</span>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CYCLE DETAILS (from Home ring) -->
+      <section class="app-view app-view--scroll app-view--sub" id="view-cycle" aria-label="Cycle details" hidden>
+        <div class="subpage-head">
+          <h2 class="h3 subpage-head__title">Cycle details</h2>
+          <p class="micro subtle subpage-head__hint">Settings, dates, and gentle estimates.</p>
+        </div>
+        <section class="card card--full cycle-detail-card">
+          <div class="home-details__body home-details__body--page">
+            <div class="home-details__grid-inputs">
+              <label class="field">
+                <span class="field__label">Cycle length (days)</span>
+                <input class="field__input" id="homeCycleLengthInput" type="number" inputmode="numeric" min="15" max="60" placeholder="28" />
+              </label>
+              <label class="field">
+                <span class="field__label">Period start date</span>
+                <input class="field__input" id="homePeriodStartInput" type="date" />
+              </label>
+              <label class="field">
+                <span class="field__label">Period duration</span>
+                <input class="field__input" id="homePeriodDurationInput" type="number" inputmode="numeric" min="2" max="10" placeholder="5" />
+              </label>
+            </div>
+
+            <div class="home-details__live">
+              <h3 class="h3 home-details__live-title">Live estimates</h3>
+              <div class="kvs home-details__kvs">
+                <div class="kv">
+                  <div class="kv__k">Current phase</div>
+                  <div class="kv__v" id="homeKvPhase">—</div>
+                </div>
+                <div class="kv">
+                  <div class="kv__k">Expected energy</div>
+                  <div class="kv__v" id="homeKvEnergy">—</div>
+                </div>
+                <div class="kv">
+                  <div class="kv__k">Next period</div>
+                  <div class="kv__v" id="homeKvNextPeriod">—</div>
+                </div>
+                <div class="kv">
+                  <div class="kv__k">Fertile window</div>
+                  <div class="kv__v" id="homeKvFertile">—</div>
+                </div>
+              </div>
+              <p class="micro subtle" id="homeCycleSaveState">Saved locally.</p>
+            </div>
+
+            <div class="home-details__phases" aria-label="Phase breakdown">
+              <h3 class="h3">Phase notes</h3>
+              <div class="phase-grid phase-grid--home">
+                <article class="phase-mini" data-phase="Period">
+                  <div class="phase-mini__k">Period</div>
+                  <div class="phase-mini__v">Lower energy is common. Warmth, rest, and gentle meals can feel supportive.</div>
+                </article>
+                <article class="phase-mini" data-phase="Follicular">
+                  <div class="phase-mini__k">Follicular</div>
+                  <div class="phase-mini__v">Energy tends to rise. A sweet window for planning and building.</div>
+                </article>
+                <article class="phase-mini" data-phase="Ovulation">
+                  <div class="phase-mini__k">Ovulation</div>
+                  <div class="phase-mini__v">Often the peak. Hydrate and choose movement that feels joyful.</div>
+                </article>
+                <article class="phase-mini" data-phase="Luteal">
+                  <div class="phase-mini__k">Luteal</div>
+                  <div class="phase-mini__v">Bandwidth may drop. Simplify plans and keep meals steady.</div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ENERGY ANALYTICS (from Home wave) -->
+      <section class="app-view app-view--scroll app-view--sub" id="view-energy" aria-label="Energy analytics" hidden>
+        <div class="subpage-head">
+          <h2 class="h3 subpage-head__title">Energy</h2>
+          <p class="micro subtle subpage-head__hint">Rhythm, patterns, and what to expect.</p>
+        </div>
+
+        <section class="card card--full energy-analytics-card">
+          <div class="energy-page__viz" id="energyPageChartWrap">
+            <svg
+              class="energy-card__svg energy-page__svg"
+              id="energyPageWave"
+              viewBox="0 0 720 120"
+              role="img"
+              focusable="false"
+              aria-label="Energy curve across your cycle"
+            ></svg>
+          </div>
+          <div class="energy-page__strip insights energy-strip">
+            <div class="insight-card">
+              <div class="insight-card__k">
+                <span class="insight-card__icon insight-card__icon--period" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8.2 4.8c0 3.8 3.8 4.3 3.8 7.2s-3.8 3.4-3.8 7.2" />
+                    <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M15.8 4.8c0 3.8-3.8 4.3-3.8 7.2s3.8 3.4 3.8 7.2" />
+                  </svg>
+                </span>
+                <span class="insight-card__label">Next period</span>
+              </div>
+              <div class="insight-card__v" id="energyPgNext">—</div>
+              <div class="micro subtle" id="energyPgNextSub">—</div>
+            </div>
+            <div class="insight-card">
+              <div class="insight-card__k">
+                <span class="insight-card__icon insight-card__icon--fertile" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M19.5 4.5c-5.2.5-9.2 3.5-11 7.3-1.2 2.4-1.4 5-.8 7.7 3.2-.6 5.8-2.1 7.7-4.2 3.1-3.3 4.1-7.4 4.1-10.8Z" />
+                    <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M6.2 18.8c2.6-3.1 5.8-5.6 9.9-7.5" />
+                  </svg>
+                </span>
+                <span class="insight-card__label">Fertile window</span>
+              </div>
+              <div class="insight-card__v" id="energyPgFertile">—</div>
+            </div>
+            <div class="insight-card">
+              <div class="insight-card__k">
+                <span class="insight-card__icon insight-card__icon--guidance" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M4.5 13.2c2.2-2.8 4.7-4.2 7.1-4.2 2.6 0 4.4 1.7 7.9 1.7 1.7 0 3.1-.4 4-1" />
+                    <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M6 16.5c2.1-1.7 4.1-2.6 6.2-2.6 2.1 0 3.7.9 5.8.9" />
+                  </svg>
+                </span>
+                <span class="insight-card__label">Guidance</span>
+              </div>
+              <div class="insight-card__v" id="energyPgGuidance">—</div>
+              <div class="micro subtle" id="energyPgGuidanceSub">—</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <h3 class="h3">Patterns</h3>
+          <div class="insight-list" id="energyInsightList" aria-label="Energy-related patterns"></div>
+        </section>
+      </section>
+
+      <!-- CALENDAR -->
+      <section class="app-view app-view--scroll" id="view-calendar" aria-label="Calendar" hidden>
+        <section class="card card--calendar card--full" aria-label="Calendar">
+          <div class="card__body card__body--calendar">
+            <div class="calendar" id="calendar">
+              <div class="calendar__top">
+                <div class="cal-nav" aria-label="Calendar navigation">
+                  <button class="icon-btn" id="prevMonthBtn" type="button" aria-label="Previous month">
+                    <span aria-hidden="true">‹</span>
+                  </button>
+                  <div class="cal-title" id="calTitle" aria-live="polite"></div>
+                  <button class="icon-btn" id="nextMonthBtn" type="button" aria-label="Next month">
+                    <span aria-hidden="true">›</span>
+                  </button>
+                </div>
+                <p class="micro subtle calendar__hint">Tap a day for details.</p>
+              </div>
+              <div class="calendar__dow" aria-hidden="true">
+                <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+              </div>
+              <div class="calendar__grid" id="calendarGrid" role="grid" aria-label="Monthly calendar"></div>
+            </div>
+
+            <div class="day-panel" id="dayPanel" aria-label="Selected day details">
+              <div class="day-panel__empty subtle" id="dayPanelEmpty">
+                Select a date to see what you logged — or add a quick check‑in.
+              </div>
+              <div class="day-panel__content" id="dayPanelContent" hidden>
+                <div class="day-panel__top">
+                  <div>
+                    <div class="micro subtle">Selected</div>
+                    <div class="day-panel__date" id="selectedDateLabel">—</div>
+                  </div>
+                  <div class="pill" id="phasePill" hidden></div>
+                </div>
+
+                <div class="kvs">
+                  <div class="kv">
+                    <div class="kv__k">Period</div>
+                    <div class="kv__v" id="kvPeriod">—</div>
+                  </div>
+                  <div class="kv">
+                    <div class="kv__k">Check‑in</div>
+                    <div class="kv__v" id="kvCheckin">—</div>
+                  </div>
+                </div>
+
+                <div class="day-panel__guidance" aria-label="Gentle guidance">
+                  <div class="micro subtle day-panel__guidance-k">Guidance</div>
+                  <div class="day-panel__guidance-v" id="dayPanelTone">—</div>
+                </div>
+
+                <section class="day-panel__legend" aria-label="Cycle signals legend">
+                  <div class="day-panel__legend-head">
+                    <div class="micro subtle">Cycle signals</div>
+                  </div>
+                  <div class="day-panel__legend-items">
+                    <span class="legend-pill legend-pill--period">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M12 3.2c2.7 4.2 6.6 7.6 6.6 11.8A6.6 6.6 0 0 1 12 21.6 6.6 6.6 0 0 1 5.4 15c0-4.2 3.9-7.6 6.6-11.8Z"/></svg>
+                      <span>Period</span>
+                    </span>
+                    <span class="legend-pill legend-pill--fertile">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M19.5 4.5c-5.2.5-9.2 3.5-11 7.3-1.2 2.4-1.4 5-.8 7.7 3.2-.6 5.8-2.1 7.7-4.2 3.1-3.3 4.1-7.4 4.1-10.8Z"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M6.2 18.8c2.6-3.1 5.8-5.6 9.9-7.5"/></svg>
+                      <span>Fertile</span>
+                    </span>
+                    <span class="legend-pill legend-pill--ovu">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M12 2.7l1.9 6.2 6.2 1.9-6.2 1.9L12 18.9l-1.9-6.2-6.2-1.9 6.2-1.9L12 2.7Z"/></svg>
+                      <span>Ovulation</span>
+                    </span>
+                    <span class="legend-pill legend-pill--low">
+                      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8.6 18.4h8.9a3.2 3.2 0 0 0 .6-6.3 4.6 4.6 0 0 0-9-.9 3.5 3.5 0 0 0-.5 7.2Z"/><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M15.7 6.9a3.4 3.4 0 0 1 2.8 1.5"/></svg>
+                      <span>Rest day</span>
+                    </span>
+                  </div>
+                </section>
+
+                <div class="day-panel__actions">
+                  <button class="btn btn--soft js-open-checkin-today" id="quickCheckinBtn" type="button">Daily check‑in</button>
+                  <button class="btn btn--soft js-open-period-today" id="quickPeriodBtn" type="button">Log period</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- INSIGHTS -->
+      <section class="app-view app-view--scroll" id="view-insights" aria-label="Insights" hidden>
+        <div class="view-page-head">
+          <h2 class="h3">Insights</h2>
+          <p class="micro subtle">Simple patterns, gently explained.</p>
+        </div>
+        <section class="card card--full" aria-label="Insights content">
+          <div class="card__body">
+            <div class="insights-dash">
+              <div class="insights-grid insights-grid--top" aria-label="Summary">
+                <div class="insight-card insight-card--summary">
+                  <div class="insight-card__k">
+                    <span class="insight-card__icon insight-card__icon--period" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M8.2 4.8c0 3.8 3.8 4.3 3.8 7.2s-3.8 3.4-3.8 7.2" />
+                        <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M15.8 4.8c0 3.8-3.8 4.3-3.8 7.2s3.8 3.4 3.8 7.2" />
+                      </svg>
+                    </span>
+                    <span class="insight-card__label">Next period</span>
+                  </div>
+                  <div class="insight-card__v" id="insNextPeriod">—</div>
+                  <div class="micro subtle" id="insNextPeriodSub">Add a period to enable predictions.</div>
+                </div>
+
+                <div class="insight-card insight-card--summary">
+                  <div class="insight-card__k">
+                    <span class="insight-card__icon insight-card__icon--fertile" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M19.5 4.5c-5.2.5-9.2 3.5-11 7.3-1.2 2.4-1.4 5-.8 7.7 3.2-.6 5.8-2.1 7.7-4.2 3.1-3.3 4.1-7.4 4.1-10.8Z" />
+                        <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M6.2 18.8c2.6-3.1 5.8-5.6 9.9-7.5" />
+                      </svg>
+                    </span>
+                    <span class="insight-card__label">Fertile window</span>
+                  </div>
+                  <div class="insight-card__v" id="insFertileWindow">—</div>
+                  <div class="micro subtle">Basic estimate (no temperature/ovulation tests).</div>
+                </div>
+
+                <div class="insight-card insight-card--summary">
+                  <div class="insight-card__k">
+                    <span class="insight-card__icon insight-card__icon--guidance" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M4.5 13.2c2.2-2.8 4.7-4.2 7.1-4.2 2.6 0 4.4 1.7 7.9 1.7 1.7 0 3.1-.4 4-1" />
+                        <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M6 16.5c2.1-1.7 4.1-2.6 6.2-2.6 2.1 0 3.7.9 5.8.9" />
+                      </svg>
+                    </span>
+                    <span class="insight-card__label">Current phase</span>
+                  </div>
+                  <div class="insight-card__v" id="insGuidance">—</div>
+                  <div class="micro subtle" id="insGuidanceSub">Log at least one period to see phases.</div>
+                </div>
+              </div>
+
+              <div class="insights-grid insights-grid--quick" aria-label="Quick insights">
+                <div class="insight-card insight-card--mini">
+                  <div class="insight-card__k"><span class="insight-card__label">Energy</span></div>
+                  <div class="insight-card__v" id="insQuickEnergy">—</div>
+                  <div class="micro subtle" id="insQuickEnergySub">—</div>
+                </div>
+                <div class="insight-card insight-card--mini">
+                  <div class="insight-card__k"><span class="insight-card__label">Mood</span></div>
+                  <div class="insight-card__v" id="insQuickMood">—</div>
+                  <div class="micro subtle" id="insQuickMoodSub">—</div>
+                </div>
+                <div class="insight-card insight-card--mini">
+                  <div class="insight-card__k"><span class="insight-card__label">Hydration</span></div>
+                  <div class="insight-card__v" id="insQuickHydration">—</div>
+                  <div class="micro subtle" id="insQuickHydrationSub">—</div>
+                </div>
+                <div class="insight-card insight-card--mini">
+                  <div class="insight-card__k"><span class="insight-card__label">Recovery</span></div>
+                  <div class="insight-card__v" id="insQuickRecovery">—</div>
+                  <div class="micro subtle" id="insQuickRecoverySub">—</div>
+                </div>
+              </div>
+
+              <section class="insights-reflection" aria-label="Reflection">
+                <div class="insights-reflection__head">
+                  <span class="insights-reflection__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M12 2.7l1.9 6.2 6.2 1.9-6.2 1.9L12 18.9l-1.9-6.2-6.2-1.9 6.2-1.9L12 2.7Z" />
+                    </svg>
+                  </span>
+                  <div>
+                    <div class="micro subtle">Reflection</div>
+                    <div class="insights-reflection__title" id="insReflectionTitle">A gentle note for today</div>
+                  </div>
+                </div>
+                <div class="insights-reflection__body" id="insReflectionBody">
+                  Your body works in seasons. A small daily check‑in helps Ayla learn your rhythm — softly, over time.
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- FOOD -->
+      <section class="app-view app-view--scroll" id="view-food" aria-label="Food guidance" hidden>
+        <section class="card card--full" aria-label="Food recommendations">
+          <div class="card__body">
+            <div class="panel-head">
+              <div class="micro subtle">Gentle food support for each cycle phase.</div>
+              <div class="seg-mini" role="group" aria-label="Food focus">
+                <button class="seg-mini__btn is-active" id="foodAllBtn" type="button">All phases</button>
+                <button class="seg-mini__btn" id="foodTodayBtn" type="button">Today</button>
+              </div>
+            </div>
+            <div class="phase-board" aria-label="Food guidance board">
+              <div class="phase-board__main" aria-label="Food phases">
+                <div class="phase-cards" id="foodCards" aria-label="Food phase cards"></div>
+              </div>
+              <aside class="phase-board__aside" aria-label="Food support">
+                <div class="phase-aside" id="foodAside"></div>
+              </aside>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- MOVEMENT -->
+      <section class="app-view app-view--scroll" id="view-movement" aria-label="Movement guidance" hidden>
+        <section class="card card--full" aria-label="Movement recommendations">
+          <div class="card__body">
+            <div class="panel-head">
+              <div class="micro subtle">Gentle movement suggestions for each phase.</div>
+              <div class="seg-mini" role="group" aria-label="Movement focus">
+                <button class="seg-mini__btn is-active" id="moveAllBtn" type="button">All phases</button>
+                <button class="seg-mini__btn" id="moveTodayBtn" type="button">Today</button>
+              </div>
+            </div>
+            <div class="phase-board" aria-label="Movement guidance board">
+              <div class="phase-board__main" aria-label="Movement phases">
+                <div class="phase-cards" id="moveCards" aria-label="Movement phase cards"></div>
+              </div>
+              <aside class="phase-board__aside" aria-label="Movement support">
+                <div class="phase-aside" id="moveAside"></div>
+              </aside>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer class="app-footer" role="contentinfo">
+      <p class="app-footer__tagline">Designed to move gently with your rhythm.</p>
+      <nav class="app-footer__nav" aria-label="Utilities">
+        <button class="btn btn--ghost btn--compact app-footer__link" id="themeBtn" type="button">Themes</button>
+        <button class="btn btn--ghost btn--compact app-footer__link" id="footerPrivacyBtn" type="button">Privacy</button>
+        <button class="btn btn--ghost btn--compact app-footer__link" id="logoutBtn" type="button">Log out</button>
+      </nav>
+    </footer>
+
+    <!-- MODALS -->
+    <dialog class="modal" id="checkinModal" aria-label="Daily check-in">
+      <form method="dialog" class="modal__card" id="checkinForm">
+        <div class="modal__head">
+          <div>
+            <div class="micro subtle">Daily check‑in</div>
+            <div class="h3" id="checkinTitleDate">Today</div>
+          </div>
+          <button class="icon-btn" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
+        </div>
+
+        <div class="modal__body">
+          <div class="group">
+            <div class="group__label">Mood</div>
+            <div class="chips" id="moodChips" aria-label="Mood"></div>
+          </div>
+          <div class="group">
+            <div class="group__label">Energy</div>
+            <div class="chips" id="energyChips" aria-label="Energy"></div>
+          </div>
+          <div class="group">
+            <div class="group__label">Pain</div>
+            <div class="chips" id="painChips" aria-label="Pain"></div>
+          </div>
+          <label class="field">
+            <span class="field__label">Notes (optional)</span>
+            <textarea class="field__textarea" id="notes" rows="3" placeholder="Anything you want to remember…"></textarea>
+          </label>
+          <p class="micro subtle">Designed to take under 10 seconds.</p>
+        </div>
+
+        <div class="modal__foot">
+          <button class="btn btn--ghost btn--danger" id="deleteCheckinBtn" type="button">
+            <span class="btn__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M9 3.5h6m-8 3h10m-1 0-.8 13.2a2 2 0 0 1-2 1.8H10.8a2 2 0 0 1-2-1.8L8 6.5m3 3.5v8m2-8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            Remove
+          </button>
+          <div class="spacer"></div>
+          <button class="btn btn--primary btn--ritual" id="saveCheckinBtn" value="default" type="submit">
+            Save check‑in
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="periodModal" aria-label="Log period">
+      <form method="dialog" class="modal__card" id="periodForm">
+        <div class="modal__head">
+          <div>
+            <div class="micro subtle">Log period</div>
+            <div class="h3">Select dates</div>
+          </div>
+          <button class="icon-btn" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
+        </div>
+
+        <div class="modal__body">
+          <div class="two-col">
+            <label class="field">
+              <span class="field__label">Start date</span>
+              <span class="field__control field__control--icon">
+                <span class="field__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M19.5 4.5c-5.2.5-9.2 3.5-11 7.3-1.2 2.4-1.4 5-.8 7.7 3.2-.6 5.8-2.1 7.7-4.2 3.1-3.3 4.1-7.4 4.1-10.8Z"/><path d="M6.2 18.8c2.6-3.1 5.8-5.6 9.9-7.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </span>
+                <input class="field__input field__input--icon" id="periodStart" type="date" />
+              </span>
+            </label>
+            <label class="field">
+              <span class="field__label">End date</span>
+              <span class="field__control field__control--icon">
+                <span class="field__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M8.6 18.5h8.8a3.1 3.1 0 0 0 .5-6.1 4.4 4.4 0 0 0-8.5-1.4 3.4 3.4 0 0 0-.8 6.5Z"/></svg>
+                </span>
+                <input class="field__input field__input--icon" id="periodEnd" type="date" />
+              </span>
+            </label>
+          </div>
+
+          <div class="group">
+            <div class="group__label">Flow</div>
+            <div class="chips" id="flowChips" aria-label="Flow"></div>
+          </div>
+
+          <p class="micro subtle">
+            Stored only on this device. You can edit anytime.
+          </p>
+
+          <p class="micro error" id="periodError" role="status" aria-live="polite" hidden></p>
+        </div>
+
+        <div class="modal__foot">
+          <button class="btn btn--ghost btn--danger" id="deletePeriodBtn" type="button">
+            <span class="btn__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M9 3.5h6m-8 3h10m-1 0-.8 13.2a2 2 0 0 1-2 1.8H10.8a2 2 0 0 1-2-1.8L8 6.5m3 3.5v8m2-8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </span>
+            Remove last
+          </button>
+          <div class="spacer"></div>
+          <button class="btn btn--primary btn--ritual" id="savePeriodBtn" value="default" type="submit">Save period</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="phaseLearnModal" aria-label="Cycle phase guidance">
+      <form method="dialog" class="modal__card modal__card--phase" id="phaseLearnForm">
+        <div class="modal__head">
+          <div class="phase-learn__head">
+            <span class="phase-learn__icon" id="phaseLearnIcon" aria-hidden="true"></span>
+            <div>
+              <div class="micro subtle">Phase guide</div>
+              <div class="h3" id="phaseLearnTitle">Period</div>
+            </div>
+          </div>
+          <button class="icon-btn" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
+        </div>
+
+        <div class="modal__body">
+          <div class="phase-learn__summary" id="phaseLearnSubtitle">
+            Your body is shifting inward. Softer pacing can feel supportive.
+          </div>
+
+          <div class="phase-learn__grid" id="phaseLearnGrid" aria-label="Phase guidance sections"></div>
+
+          <div class="phase-learn__footnote micro subtle" id="phaseLearnNote">
+            Gentle guidance for reflection — not medical advice.
+          </div>
+        </div>
+
+        <div class="modal__foot">
+          <div class="spacer"></div>
+          <button class="btn btn--primary btn--ritual" value="cancel" type="submit">Close</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="privacyModal" aria-label="Privacy">
+      <form method="dialog" class="modal__card modal__card--tight">
+        <div class="modal__head">
+          <div>
+            <div class="micro subtle">Privacy</div>
+            <div class="h3">Your data stays on your device</div>
+          </div>
+          <button class="icon-btn" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
+        </div>
+        <div class="modal__body">
+          <ul class="list">
+            <li>No external APIs</li>
+            <li>No analytics</li>
+            <li>No account recovery</li>
+            <li>Everything is stored in your browser’s <span class="mono">localStorage</span></li>
+          </ul>
+          <p class="micro subtle">
+            If you clear site data or switch browsers/devices, your data won’t follow.
+          </p>
+        </div>
+        <div class="modal__foot">
+          <div class="spacer"></div>
+          <button class="btn btn--primary" value="default" type="submit">Got it</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="settingsModal" aria-label="Settings">
+      <form method="dialog" class="modal__card modal__card--tight">
+        <div class="modal__head">
+          <div>
+            <div class="micro subtle">Settings</div>
+            <div class="h3">This device</div>
+          </div>
+          <button class="icon-btn" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
+        </div>
+        <div class="modal__body">
+          <p class="subtle">
+            Ayla keeps your journal locally. Use Themes to adjust appearance, or review Privacy anytime from the menu.
+          </p>
+          <button class="btn btn--soft btn--block" id="settingsThemeBtn" type="button">Open Themes</button>
+        </div>
+        <div class="modal__foot">
+          <div class="spacer"></div>
+          <button class="btn btn--primary" value="default" type="submit">Done</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal day-modal" id="dayModal" aria-label="Day view">
+      <form method="dialog" class="modal__card day-modal__card">
+        <div class="modal__head">
+          <div>
+            <div class="micro subtle" id="dayModalSubtitle">Day view</div>
+            <div class="h3" id="dayModalDate">—</div>
+          </div>
+          <button class="icon-btn" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
+        </div>
+
+        <div class="modal__body day-modal__body">
+          <section class="day-block" aria-label="Day summary">
+            <div class="day-block__top">
+              <div class="pill" id="dayModalPhase" hidden></div>
+              <div class="mini-bars" aria-label="Indicators">
+                <div class="mini-bars__item">
+                  <div class="mini-bars__k">Energy</div>
+                  <div class="mini-bars__bar"><div class="mini-bars__fill" id="dayEnergyFill"></div></div>
+                </div>
+                <div class="mini-bars__item">
+                  <div class="mini-bars__k">Pain</div>
+                  <div class="mini-bars__bar"><div class="mini-bars__fill mini-bars__fill--rose" id="dayPainFill"></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="day-quote" id="dayModalEmotionLine">A gentle place to check in.</div>
+          </section>
+
+          <section class="day-block" aria-label="Logged data">
+            <div class="day-grid">
+              <div class="soft-card">
+                <div class="soft-card__k">Mood</div>
+                <div class="soft-card__v" id="dayMood">—</div>
+              </div>
+              <div class="soft-card">
+                <div class="soft-card__k">Energy</div>
+                <div class="soft-card__v" id="dayEnergy">—</div>
+              </div>
+              <div class="soft-card">
+                <div class="soft-card__k">Pain</div>
+                <div class="soft-card__v" id="dayPain">—</div>
+              </div>
+              <div class="soft-card soft-card--wide">
+                <div class="soft-card__k">Notes</div>
+                <div class="soft-card__v soft-card__v--notes" id="dayNotes">No notes.</div>
+              </div>
+            </div>
+            <p class="micro subtle" id="dayNoData" hidden>No data logged for this day yet.</p>
+          </section>
+
+          <section class="day-actions" aria-label="Quick actions">
+            <button class="btn btn--soft" id="dayActionCheckin" type="button">Add check‑in</button>
+            <button class="btn btn--soft" id="dayActionPeriod" type="button">Log / edit period</button>
+          </section>
+
+          <details class="accordion" id="dayInsightsDetails">
+            <summary class="accordion__summary">Smart insights</summary>
+            <div class="accordion__body">
+              <div class="micro subtle" id="daySmartInsightsEmpty">Not enough history yet. A few check‑ins will unlock patterns.</div>
+              <div class="insight-list" id="daySmartInsights"></div>
+            </div>
+          </details>
+
+          <details class="accordion" id="dayCompareDetails">
+            <summary class="accordion__summary">Last cycle comparison</summary>
+            <div class="accordion__body">
+              <div class="micro subtle" id="dayCompareLine">—</div>
+            </div>
+          </details>
+
+          <details class="accordion" id="dayGuidanceDetails" open>
+            <summary class="accordion__summary">Gentle guidance</summary>
+            <div class="accordion__body">
+              <div class="day-guidance" id="dayGuidance">—</div>
+            </div>
+          </details>
+        </div>
+
+        <div class="modal__foot">
+          <button class="btn btn--ghost" value="cancel" type="submit">Close</button>
+          <div class="spacer"></div>
+          <button class="btn btn--primary" id="dayDoneBtn" value="default" type="submit">Done</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal theme-modal" id="themeModal" aria-label="Choose theme">
+      <form method="dialog" class="modal__card modal__card--tight">
+        <div class="modal__head">
+          <div>
+            <div class="micro subtle">Personalization</div>
+            <div class="h3">Themes</div>
+          </div>
+          <button class="icon-btn" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
+        </div>
+        <div class="modal__body">
+          <div class="scroll-area scroll-fade theme-scroll" id="themeScroll" aria-label="Theme options">
+            <div class="theme-list" id="themeList"></div>
+          </div>
+          <p class="micro subtle">Your preference stays on this device.</p>
+        </div>
+        <div class="modal__foot">
+          <div class="spacer"></div>
+          <button class="btn btn--primary" value="default" type="submit">Done</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="./theme.js" defer></script>
+    <script src="./dashboard.js" defer></script>
+  </body>
+</html>
