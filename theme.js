@@ -53,6 +53,13 @@ function applyAylaTheme(themeId, { persist = true } = {}) {
 
   if (persist) localStorage.setItem(AYLA_THEME_KEY, id);
 
+  const themeBtn = document.getElementById("themeBtn");
+  if (themeBtn) {
+    const isNight = id === "theme-midnight-pro";
+    themeBtn.classList.toggle("is-night", isNight);
+    themeBtn.setAttribute("aria-label", isNight ? "Choose light theme" : "Choose theme");
+  }
+
   // Update UI selected state if present
   const list = document.getElementById("themeList");
   if (list) {

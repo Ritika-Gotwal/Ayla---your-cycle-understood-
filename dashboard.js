@@ -205,6 +205,14 @@ function fertileWindowForISO(periods, iso) {
   return cyc?.fertileWindow || null;
 }
 
+function gentlePhaseGuidance(phase) {
+  if (phase === "Period") return "Your body may appreciate warmth, rest, and a slower rhythm today. Small comfort choices count.";
+  if (phase === "Follicular") return "Energy may be beginning to rise. Choose one fresh intention and let it feel easy.";
+  if (phase === "Ovulation") return "You may feel brighter or more outward. Hydrate, nourish well, and let connection feel gentle.";
+  if (phase === "Luteal") return "Bandwidth can feel softer here. Steady meals, calmer pacing, and earlier rest may support you.";
+  return "Ayla will offer gentler daily guidance as your cycle rhythm becomes clearer.";
+}
+
 /**
  * Single source of truth for cycle phase + fertility signals.
  * Returns null when there isn't enough data to make a deterministic call.
@@ -222,7 +230,7 @@ function cycleForISO(periods, prefs, iso) {
   if (contained) {
     return {
       phase: "Period",
-      tone: "Gentle rest. Warmth, softness, and slow plans.",
+      tone: gentlePhaseGuidance("Period"),
       startISO,
       cycleLen: cycleLenForStart(ps, startISO, prefs),
       periodDur,
@@ -258,12 +266,12 @@ function cycleForISO(periods, prefs, iso) {
 
   const tone =
     phase === "Follicular"
-      ? "Steady energy. Great time to plan and start fresh."
+      ? gentlePhaseGuidance("Follicular")
       : phase === "Ovulation"
-        ? "You may feel bright and social. Hydrate and listen in."
+        ? gentlePhaseGuidance("Ovulation")
         : phase === "Luteal"
-          ? "Lower bandwidth is normal. Choose softer tasks and early nights."
-          : "Gentle rest. Warmth, softness, and slow plans.";
+          ? gentlePhaseGuidance("Luteal")
+          : gentlePhaseGuidance("Period");
 
   return {
     phase,
@@ -282,9 +290,9 @@ function dynamicTopLine(phase, checkin) {
   if (checkin?.pain === "High") return "A tender day. Choose softness, warmth, and a slower pace.";
   if (checkin?.energy === "Low") return "You’re in a slower phase today. Go gently with yourself.";
   if (checkin?.energy === "High") return "Energy is rising today. This can be a lovely time to begin.";
-  if (phase === "Period") return "A quieter phase today. Rest is productive too.";
-  if (phase === "Follicular") return "You may feel more open to starting fresh today.";
-  if (phase === "Ovulation") return "A brighter phase today. Let things feel light and flowing.";
+  if (phase === "Period") return "A quieter phase today. Rest and warmth can be supportive.";
+  if (phase === "Follicular") return "You may feel more open to starting fresh gently today.";
+  if (phase === "Ovulation") return "A brighter phase today. Let things feel light, hydrated, and flowing.";
   if (phase === "Luteal") return "A softer rhythm may support you best right now.";
   return "A gentle place to check in.";
 }
@@ -699,7 +707,9 @@ const homeCycleWhisper = $$("#homeCycleWhisper");
 const heroEnergyWave = $$("#heroEnergyWave");
 const energyPageWave = $$("#energyPageWave");
 const heroWaveTooltip = $$("#heroWaveTooltip");
+const energyPageWaveTooltip = $$("#energyPageWaveTooltip");
 const heroEnergyChartWrap = $$("#heroEnergyChartWrap");
+const energyPageChartWrap = $$("#energyPageChartWrap");
 const heroCycleBtn = $$("#heroCycleBtn");
 const dashboardShell = $$(".dashboard-shell");
 const logoutBtn = $$("#logoutBtn");
@@ -752,11 +762,13 @@ const heroEnergyBtn = $$("#heroEnergyBtn");
 
 const checkinModal = $$("#checkinModal");
 const checkinTitleDate = $$("#checkinTitleDate");
+const closeCheckinBtn = $$("#closeCheckinBtn");
 const moodChips = $$("#moodChips");
 const energyChips = $$("#energyChips");
 const painChips = $$("#painChips");
 const notesEl = $$("#notes");
 const deleteCheckinBtn = $$("#deleteCheckinBtn");
+const saveCheckinBtn = $$("#saveCheckinBtn");
 
 const periodModal = $$("#periodModal");
 const periodStartEl = $$("#periodStart");
@@ -764,6 +776,7 @@ const periodEndEl = $$("#periodEnd");
 const flowChips = $$("#flowChips");
 const periodError = $$("#periodError");
 const deletePeriodBtn = $$("#deletePeriodBtn");
+const savePeriodBtn = $$("#savePeriodBtn");
 
 // Phase learn modal (educational popups from Phase notes)
 const phaseLearnModal = $$("#phaseLearnModal");
@@ -778,6 +791,7 @@ const dayModalDate = $$("#dayModalDate");
 const dayModalSubtitle = $$("#dayModalSubtitle");
 const dayModalPhase = $$("#dayModalPhase");
 const dayModalEmotionLine = $$("#dayModalEmotionLine");
+const daySummaryTitle = $$("#daySummaryTitle");
 const dayMood = $$("#dayMood");
 const dayEnergy = $$("#dayEnergy");
 const dayPain = $$("#dayPain");
@@ -787,13 +801,17 @@ const dayActionCheckin = $$("#dayActionCheckin");
 const dayActionPeriod = $$("#dayActionPeriod");
 const dayEnergyFill = $$("#dayEnergyFill");
 const dayPainFill = $$("#dayPainFill");
+const dayMoodMini = $$("#dayMoodMini");
 const daySmartInsights = $$("#daySmartInsights");
 const daySmartInsightsEmpty = $$("#daySmartInsightsEmpty");
+const dayInsightsPreview = $$("#dayInsightsPreview");
 const dayCompareLine = $$("#dayCompareLine");
+const dayComparePreview = $$("#dayComparePreview");
 const dayGuidance = $$("#dayGuidance");
 const dayInsightsDetails = $$("#dayInsightsDetails");
 const dayCompareDetails = $$("#dayCompareDetails");
 const dayGuidanceDetails = $$("#dayGuidanceDetails");
+const dayDoneBtn = $$("#dayDoneBtn");
 
 const foodCards = $$("#foodCards");
 const moveCards = $$("#moveCards");
@@ -812,6 +830,19 @@ function openModal(dlg) {
 function closeModal(dlg) {
   if (typeof dlg.close === "function") dlg.close();
   else dlg.removeAttribute("open");
+}
+
+function showCalmToast(message) {
+  const toast = document.createElement("div");
+  toast.className = "calm-toast";
+  toast.setAttribute("role", "status");
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("is-visible"));
+  setTimeout(() => {
+    toast.classList.remove("is-visible");
+    setTimeout(() => toast.remove(), 220);
+  }, 2200);
 }
 
 const PHASE_LEARN = {
@@ -1151,10 +1182,37 @@ function renderHomeCycleDetails() {
     homeKvFertile.textContent = fw ? `${formatNiceDate(fw.startISO)} → ${formatNiceDate(fw.endISO)}` : "—";
   }
 
+  const phaseNotes = {
+    Period: {
+      current: "During this phase, your body might appreciate warmth, rest, and gentle meals as energy naturally softens.",
+      future: "When you reach this phase, consider protecting rest, warmth, and simple nourishment.",
+    },
+    Follicular: {
+      current: "During this phase, your body might appreciate fresh energy, steady nourishment, and one kind intention.",
+      future: "When you reach this phase, consider using rising energy for planning, creativity, or gentle strength.",
+    },
+    Ovulation: {
+      current: "During this phase, your body might appreciate hydration, protein, and joyful movement without overextending.",
+      future: "When you reach this phase, consider hydration, communication, and balanced intensity.",
+    },
+    Luteal: {
+      current: "During this phase, your body might appreciate steadier meals, earlier rest, and simpler plans.",
+      future: "When you reach this phase, consider grounding routines, calmer pacing, and consistent meals.",
+    },
+  };
+
   $$$("#view-cycle .phase-mini").forEach((el) => {
     const ph = el.getAttribute("data-phase");
+    const note = ph ? phaseNotes[ph] : null;
+    const text = el.querySelector(".phase-mini__v");
+    const isCurrent = Boolean(info.phase && ph === info.phase);
+    if (text && note) {
+      const context = info.phase ? (isCurrent ? note.current : note.future) : "As your cycle history grows, Ayla will gently personalize this phase guidance.";
+      text.textContent = context;
+      el.setAttribute("aria-label", `${ph} phase note. ${text.textContent}`);
+    }
     el.style.borderColor = ph ? phaseAccentVar(ph) : "var(--line)";
-    el.classList.toggle("is-current", Boolean(info.phase && ph === info.phase));
+    el.classList.toggle("is-current", isCurrent);
   });
 }
 
@@ -1331,6 +1389,7 @@ function renderEnergyWaveInto(svgRoot, { cycleLen, day, phase }, opts = {}) {
   const areaD = `${dPath} L ${last.x.toFixed(2)} ${bottomY.toFixed(2)} L ${first.x.toFixed(2)} ${bottomY.toFixed(2)} Z`;
 
   const defs = svgEl("defs", {});
+  const glowId = `${lineId}Glow`;
   const grad = svgEl("linearGradient", {
     id: gradId,
     x1: "0",
@@ -1343,6 +1402,20 @@ function renderEnergyWaveInto(svgRoot, { cycleLen, day, phase }, opts = {}) {
   grad.appendChild(svgEl("stop", { offset: "55%", "stop-color": accent, "stop-opacity": "0.08" }));
   grad.appendChild(svgEl("stop", { offset: "100%", "stop-color": accent, "stop-opacity": "0" }));
   defs.appendChild(grad);
+  const glow = svgEl("filter", {
+    id: glowId,
+    x: "-8%",
+    y: "-18%",
+    width: "116%",
+    height: "136%",
+    "color-interpolation-filters": "sRGB",
+  });
+  glow.appendChild(svgEl("feGaussianBlur", { stdDeviation: "1.45", result: "softBlur" }));
+  glow.appendChild(svgEl("feMerge", {}));
+  const merge = glow.querySelector("feMerge");
+  merge?.appendChild(svgEl("feMergeNode", { in: "softBlur" }));
+  merge?.appendChild(svgEl("feMergeNode", { in: "SourceGraphic" }));
+  defs.appendChild(glow);
 
   const base = svgEl("path", {
     d: `M ${padX} ${bottomY.toFixed(2)} L ${(W - padX).toFixed(2)} ${bottomY.toFixed(2)}`,
@@ -1359,6 +1432,25 @@ function renderEnergyWaveInto(svgRoot, { cycleLen, day, phase }, opts = {}) {
   });
 
   const strokeW = opts.strokeWidth ?? 3;
+  const lineGlow = svgEl("path", {
+    d: dPath,
+    fill: "none",
+    stroke: accent,
+    "stroke-width": String(strokeW + 4.8),
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+    opacity: "0.18",
+    filter: `url(#${glowId})`,
+  });
+  const lineBase = svgEl("path", {
+    d: dPath,
+    fill: "none",
+    stroke: accent,
+    "stroke-width": String(strokeW + 2.2),
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+    opacity: "0.18",
+  });
   const line = svgEl("path", {
     id: lineId,
     d: dPath,
@@ -1367,7 +1459,7 @@ function renderEnergyWaveInto(svgRoot, { cycleLen, day, phase }, opts = {}) {
     "stroke-width": String(strokeW),
     "stroke-linecap": "round",
     "stroke-linejoin": "round",
-    opacity: "0.94",
+    opacity: "1",
   });
 
   const dotR = opts.dotR ?? 6;
@@ -1383,27 +1475,45 @@ function renderEnergyWaveInto(svgRoot, { cycleLen, day, phase }, opts = {}) {
       r: String(dotR),
       fill: accent,
       stroke: "rgba(255,255,255,.94)",
-      "stroke-width": "2.2",
+      "stroke-width": "2.4",
       opacity: day ? "1" : "0.5",
     });
   })();
 
+  const hoverDot = svgEl("circle", {
+    id: `${lineId}HoverDot`,
+    class: "energy-hover-dot",
+    cx: points[0].x,
+    cy: points[0].y,
+    r: String(dotR * 0.82),
+    fill: accent,
+    stroke: "rgba(255,255,255,.96)",
+    "stroke-width": "2.2",
+    opacity: "0",
+  });
+
   const hover = svgEl("rect", { x: "0", y: "0", width: String(W), height: String(H), fill: "transparent" });
   hover.style.cursor = opts.skipHoverRect ? "default" : "crosshair";
 
-  const nodes = opts.skipHoverRect ? [defs, base, area, line, todayDot] : [defs, base, area, line, todayDot, hover];
+  const nodes = opts.skipHoverRect ? [defs, base, area, lineGlow, lineBase, line, todayDot, hoverDot] : [defs, base, area, lineGlow, lineBase, line, todayDot, hoverDot, hover];
 
   setSvg(svgRoot, nodes);
 
   requestAnimationFrame(() => {
     const el = svgRoot.querySelector(`#${lineId}`);
+    const glowEl = lineGlow;
+    const baseEl = lineBase;
     if (!el) return;
     const len = el.getTotalLength();
-    el.style.strokeDasharray = String(len);
-    el.style.strokeDashoffset = String(len);
+    [el, glowEl, baseEl].forEach((node) => {
+      node.style.strokeDasharray = String(len);
+      node.style.strokeDashoffset = String(len);
+    });
     requestAnimationFrame(() => {
-      el.style.transition = "stroke-dashoffset 850ms cubic-bezier(0.22, 1, 0.36, 1)";
-      el.style.strokeDashoffset = "0";
+      [el, glowEl, baseEl].forEach((node) => {
+        node.style.transition = "stroke-dashoffset 1050ms cubic-bezier(0.22, 1, 0.36, 1)";
+        node.style.strokeDashoffset = "0";
+      });
     });
   });
 }
@@ -1412,7 +1522,7 @@ function renderHeroEnergyWave(info) {
   renderEnergyWaveInto(heroEnergyWave, info, {
     gradId: "heroEnergyAreaGrad",
     lineId: "heroEnergyLine",
-    strokeWidth: 3.5,
+    strokeWidth: 4,
     dotR: 6.5,
   });
 }
@@ -1421,6 +1531,7 @@ function renderEnergyPageWave(info) {
   renderEnergyWaveInto(energyPageWave, info, {
     gradId: "energyPageAreaGrad",
     lineId: "energyPageLine",
+    strokeWidth: 3.6,
     skipHoverRect: true,
   });
 }
@@ -1431,30 +1542,73 @@ function bindHeroWaveHoverOnce() {
 
   const W = 720;
   const padX = 22;
+  const padY = 14;
   const innerW = W - padX * 2;
+  const innerH = 120 - padY * 2;
 
-  heroEnergyChartWrap?.addEventListener("mousemove", (e) => {
+  function showWaveTooltip({ wrap, svg, tooltip, clientX, clientY, lock = false }) {
     const info = state.heroCycleInfo;
-    if (!info || !heroWaveTooltip || !heroEnergyWave) return;
+    if (!info || !tooltip || !svg || !wrap) return;
     const cycleLen = info.cycleLen;
-    const rect = heroEnergyWave.getBoundingClientRect();
-    const x = (e.clientX - rect.left) * (W / rect.width);
+    const rect = svg.getBoundingClientRect();
+    const x = (clientX - rect.left) * (W / rect.width);
     const t = clamp((x - padX) / innerW, 0, 1);
     const d = 1 + Math.round(t * (cycleLen - 1));
     const ratio = expectedEnergyRatio(d, cycleLen);
     const label = energyLabelFromRatio(ratio);
-    heroWaveTooltip.textContent = `Day ${d}: ${label} energy`;
-    heroWaveTooltip.hidden = false;
-    const wrapRect = heroEnergyChartWrap.getBoundingClientRect();
-    const lx = clamp(e.clientX - wrapRect.left, 12, wrapRect.width - 12);
-    const ly = clamp(e.clientY - wrapRect.top, 12, wrapRect.height - 12);
-    heroWaveTooltip.style.left = `${lx}px`;
-    heroWaveTooltip.style.top = `${ly}px`;
-  });
+    const dot = svg.querySelector(".energy-hover-dot");
+    if (dot) {
+      dot.setAttribute("cx", String(padX + t * innerW));
+      dot.setAttribute("cy", String(padY + (1 - ratio) * innerH));
+      dot.setAttribute("opacity", "1");
+      dot.classList.add("is-active");
+    }
+    tooltip.textContent = `Day ${d}: ${label} energy`;
+    tooltip.hidden = false;
+    const wrapRect = wrap.getBoundingClientRect();
+    const lx = clamp(clientX - wrapRect.left, 16, wrapRect.width - 16);
+    const ly = clamp(clientY - wrapRect.top, 16, wrapRect.height - 16);
+    tooltip.style.left = `${lx}px`;
+    tooltip.style.top = `${ly}px`;
+    tooltip.classList.add("is-visible");
+    tooltip.classList.toggle("is-locked", lock);
+  }
 
-  heroEnergyChartWrap?.addEventListener("mouseleave", () => {
-    if (heroWaveTooltip) heroWaveTooltip.hidden = true;
-  });
+  function hideWaveTooltip(tooltip) {
+    if (!tooltip || tooltip.classList.contains("is-locked")) return;
+    const wrap = tooltip.closest(".energy-card__chart, .energy-page__viz");
+    const dot = wrap?.querySelector(".energy-hover-dot");
+    if (dot) {
+      dot.setAttribute("opacity", "0");
+      dot.classList.remove("is-active");
+    }
+    tooltip.classList.remove("is-visible");
+    setTimeout(() => {
+      if (!tooltip.classList.contains("is-visible")) tooltip.hidden = true;
+    }, 160);
+  }
+
+  function bindWaveTooltip(wrap, svg, tooltip) {
+    if (!wrap || !svg || !tooltip) return;
+    wrap.addEventListener("pointermove", (e) => {
+      if (e.pointerType === "touch" && tooltip.classList.contains("is-locked")) return;
+      showWaveTooltip({ wrap, svg, tooltip, clientX: e.clientX, clientY: e.clientY });
+    });
+    wrap.addEventListener("pointerleave", () => hideWaveTooltip(tooltip));
+    wrap.addEventListener("pointerdown", (e) => {
+      const lock = e.pointerType === "touch" || e.pointerType === "pen";
+      if (lock && tooltip.classList.contains("is-locked")) {
+        tooltip.classList.remove("is-locked");
+        hideWaveTooltip(tooltip);
+        return;
+      }
+      showWaveTooltip({ wrap, svg, tooltip, clientX: e.clientX, clientY: e.clientY, lock });
+    });
+    wrap.addEventListener("blur", () => hideWaveTooltip(tooltip), true);
+  }
+
+  bindWaveTooltip(heroEnergyChartWrap, heroEnergyWave, heroWaveTooltip);
+  bindWaveTooltip(energyPageChartWrap, energyPageWave, energyPageWaveTooltip);
 }
 
 function renderCycleIntel() {
@@ -1542,15 +1696,17 @@ function buildCalendar() {
   const first = new Date(state.viewMonth);
   const offset = mondayIndex(first.getDay());
   const daysInMonth = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
-  const weeks = Math.ceil((offset + daysInMonth) / 7);
-  const cells = weeks * 7;
+  const CALENDAR_ROWS = 6;
+  const CALENDAR_COLS = 7;
+  const cells = CALENDAR_ROWS * CALENDAR_COLS;
   const start = new Date(first);
   start.setDate(start.getDate() - offset);
   const last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
 
   calendarGrid.innerHTML = "";
-  calendarGrid.style.gridTemplateRows = `repeat(${weeks}, minmax(0, 1fr))`;
-  calendarGrid.style.aspectRatio = `7 / ${weeks}`;
+  calendarGrid.style.gridTemplateColumns = `repeat(${CALENDAR_COLS}, minmax(0, 1fr))`;
+  calendarGrid.style.gridTemplateRows = `repeat(${CALENDAR_ROWS}, minmax(0, 1fr))`;
+  calendarGrid.style.aspectRatio = `${CALENDAR_COLS} / ${CALENDAR_ROWS}`;
   const todayISO = toISODate(new Date());
   const selectedISO = state.selectedISO;
 
@@ -1559,12 +1715,17 @@ function buildCalendar() {
     d.setDate(start.getDate() + i);
     const iso = toISODate(d);
 
-    // No next-month preview dates: render a quiet blank cell instead.
-    if (d > last) {
+    // Filler cells keep every month at a stable 42-card layout.
+    if (d.getMonth() !== first.getMonth()) {
       const blank = document.createElement("div");
-      blank.className = "day day--blank";
+      blank.className = "day day--blank day--filler";
       blank.setAttribute("role", "presentation");
       blank.setAttribute("aria-hidden", "true");
+      blank.dataset.iso = iso;
+      const num = document.createElement("div");
+      num.className = "day__num";
+      num.textContent = String(d.getDate());
+      blank.appendChild(num);
       calendarGrid.appendChild(blank);
       continue;
     }
@@ -1591,7 +1752,8 @@ function buildCalendar() {
     btn.classList.toggle("sig-fertile", !anyPeriod && isFertile);
     btn.classList.toggle("sig-ovu", !anyPeriod && isOvulation);
     btn.classList.toggle("sig-energy-low", !anyPeriod && energyMark === "low");
-    btn.classList.toggle("sig-rest", !anyPeriod && !energyMark && (ph?.phase === "Luteal" || ph?.phase === "Period"));
+    // Do not auto-label unlogged days as rest days. Rest/recovery only appears from user check-in context.
+    btn.classList.toggle("sig-rest", !anyPeriod && energyMark === "low");
 
     const num = document.createElement("div");
     num.className = "day__num";
@@ -1618,7 +1780,7 @@ function buildCalendar() {
     if (anyPeriod) emblemKind = "period";
     else if (isOvulation) emblemKind = "ovu";
     else if (isFertile) emblemKind = "fertile";
-    else if (energyMark === "low" || ph?.phase === "Luteal") emblemKind = "rest";
+    else if (energyMark === "low") emblemKind = "rest";
 
     if (emblemKind) {
       emblem.classList.add(`day__emblem--${emblemKind}`);
@@ -1721,27 +1883,28 @@ function openDayView(iso) {
   const c = checkins[iso] || null;
   const p = periods.find((x) => iso >= x.startISO && iso <= x.endISO) || null;
 
-  dayModalSubtitle.textContent = state.profile?.fullName ? `For ${state.profile.fullName}` : "Your day";
+  dayModalSubtitle.textContent = state.profile?.fullName ? `Today's reflection · ${state.profile.fullName}` : "Today's reflection";
   dayModalDate.textContent = formatNiceDate(iso);
 
   const ph = phaseForDate(periods, iso);
   if (ph) {
     dayModalPhase.hidden = false;
-    dayModalPhase.textContent = ph.phase;
+    dayModalPhase.textContent = ph.phase === "Period" ? "🌸 Period day" : ph.phase;
     dayGuidance.textContent = ph.tone;
   } else {
     dayModalPhase.hidden = true;
-    dayGuidance.textContent = "Log a period to unlock phase-based guidance.";
+    dayGuidance.textContent = "Log a period when you’re ready, and Ayla will begin offering gentler day-by-day support.";
   }
 
   const emotionLine = c
-    ? `${c.energy === "Low" ? "Low energy day." : c.energy === "High" ? "High energy day." : "Steady day."} ${
-        c.pain === "High" ? "Be extra gentle with yourself." : "Keep listening to your body."
+    ? `${c.pain === "High" ? "Extra care and rest may support you today." : c.energy === "Low" ? "Today may call for gentleness and slower pacing." : c.energy === "High" ? "Your energy feels stronger today — move forward intentionally." : "Your body may appreciate a steady, unhurried rhythm today."} ${
+        c.pain === "High" ? "Warmth, softness, and fewer demands can be enough." : "Small awareness creates better care."
       }`
     : ph
       ? ph.tone
-      : "No data logged yet — you can add a quick check‑in in under 10 seconds.";
+      : "Nothing logged yet. A quick check-in can help Ayla care for this day with more context.";
   dayModalEmotionLine.textContent = emotionLine;
+  daySummaryTitle.textContent = c ? "You checked in today 🌷" : "A gentle space for today";
 
   const hasCheckin = Boolean(c);
   dayNoData.hidden = hasCheckin;
@@ -1750,6 +1913,7 @@ function openDayView(iso) {
   dayEnergy.textContent = c?.energy || "—";
   dayPain.textContent = c?.pain || "—";
   dayNotes.textContent = c?.notes ? c.notes : "No notes.";
+  dayMoodMini.textContent = c?.mood || "—";
 
   setFill(dayEnergyFill, scoreEnergy(c?.energy));
   setFill(dayPainFill, scorePain(c?.pain));
@@ -1762,6 +1926,7 @@ function openDayView(iso) {
   const dayInsights = smartInsightsForDay(periods, checkins, iso);
   daySmartInsights.innerHTML = "";
   daySmartInsightsEmpty.hidden = dayInsights.length > 0;
+  dayInsightsPreview.textContent = dayInsights[0] || "Ayla will reflect patterns as you log more.";
   dayInsights.forEach((t) => {
     const box = document.createElement("div");
     box.className = "insight-card";
@@ -1779,26 +1944,36 @@ function openDayView(iso) {
   // Comparison
   const prevISO = lastCycleSameOffsetISO(periods, iso);
   if (!prevISO) {
-    dayCompareLine.textContent = "Not enough cycle history yet for comparisons.";
+    dayCompareLine.textContent = "Ayla needs a little more cycle history before reflecting patterns back to you.";
   } else {
     const prev = checkins[prevISO] || null;
     if (!prev) {
-      dayCompareLine.textContent = `Last cycle on this day (${formatNiceDate(prevISO)}): no check‑in logged.`;
+      dayCompareLine.textContent = `Last cycle around this point (${formatNiceDate(prevISO)}), there was no check-in yet.`;
     } else if (!c) {
-      dayCompareLine.textContent = `Last cycle on this day you felt: ${prev.mood} mood · ${prev.energy} energy · ${prev.pain} pain.`;
+      dayCompareLine.textContent = `Last cycle around this point, you logged ${prev.mood} mood · ${prev.energy} energy · ${prev.pain} pain.`;
     } else {
       const energyDelta =
         scoreEnergy(c.energy) > scoreEnergy(prev.energy) ? "improved energy" : scoreEnergy(c.energy) < scoreEnergy(prev.energy) ? "lower energy" : "similar energy";
       const painDelta =
         scorePain(c.pain) < scorePain(prev.pain) ? "less pain" : scorePain(c.pain) > scorePain(prev.pain) ? "more pain" : "similar pain";
-      dayCompareLine.textContent = `Last cycle you logged: ${prev.mood} mood · ${prev.energy} energy · ${prev.pain} pain. Today: ${energyDelta}, ${painDelta}.`;
+      dayCompareLine.textContent = `Compared with last cycle, today shows ${energyDelta} and ${painDelta}. Use that as a gentle cue, not a rule.`;
     }
   }
+  dayComparePreview.textContent = dayCompareLine.textContent;
 
   // Keep a calm default: guidance open, others closed
   if (dayGuidanceDetails) dayGuidanceDetails.open = true;
   if (dayInsightsDetails) dayInsightsDetails.open = false;
   if (dayCompareDetails) dayCompareDetails.open = false;
+  if (dayDoneBtn) {
+    dayDoneBtn.textContent = "Done";
+    dayDoneBtn.classList.remove("is-success");
+    dayDoneBtn.onclick = () => {
+      dayDoneBtn.textContent = "Saved ✨";
+      dayDoneBtn.classList.add("is-success");
+      setTimeout(() => closeModal(dayModal), 650);
+    };
+  }
 
   openModal(dayModal);
 }
@@ -1838,10 +2013,10 @@ function renderInsights() {
   if (next) {
     insNextPeriod.textContent = formatNiceDate(next);
     const avg = averageCycleLength(periods) ?? 28;
-    insNextPeriodSub.textContent = `Based on an average cycle length of ${avg} days.`;
+    insNextPeriodSub.textContent = `A gentle estimate from your ${avg}-day rhythm. Use it to plan softly, not perfectly.`;
   } else {
     insNextPeriod.textContent = "—";
-    insNextPeriodSub.textContent = "Add a period to enable predictions.";
+    insNextPeriodSub.textContent = "Log a period when you can, and Ayla will begin learning your rhythm.";
   }
 
   const todayISO = toISODate(new Date());
@@ -1854,7 +2029,7 @@ function renderInsights() {
     insGuidanceSub.textContent = ph.tone;
   } else {
     insGuidance.textContent = "—";
-    insGuidanceSub.textContent = "Log at least one period to see phases.";
+    insGuidanceSub.textContent = "A little cycle history helps Ayla offer kinder, more relevant guidance.";
   }
 
   // Quick dashboard tiles (today)
@@ -1870,11 +2045,11 @@ function renderInsights() {
 
   if (qEnergy && qEnergySub) {
     qEnergy.textContent = c?.energy || "—";
-    qEnergySub.textContent = c?.energy ? "Logged today" : "Add a check‑in to personalize this.";
+    qEnergySub.textContent = c?.energy ? "Thank you for checking in today." : "A quick check‑in helps Ayla notice your energy patterns.";
   }
   if (qMood && qMoodSub) {
     qMood.textContent = c?.mood || "—";
-    qMoodSub.textContent = c?.mood ? "Logged today" : "A quick mood note helps trends emerge.";
+    qMoodSub.textContent = c?.mood ? "Your mood note is part of the pattern." : "Even one soft mood note can help future insights feel more personal.";
   }
   if (qHyd && qHydSub) {
     const hyd =
@@ -1882,12 +2057,12 @@ function renderInsights() {
     qHyd.textContent = hyd;
     qHydSub.textContent =
       ph?.phase === "Ovulation"
-        ? "Hydrate a little more than usual."
+        ? "Your body may appreciate a little extra hydration."
         : ph?.phase === "Period"
-          ? "Warm fluids can feel supportive."
+          ? "Warm fluids may feel grounding and comforting."
           : ph?.phase
-            ? "Small sips through the day."
-            : "Log a period to enable phase tips.";
+            ? "Small, steady sips are enough."
+            : "Once your cycle rhythm is available, hydration cues will become gentler and more specific.";
   }
   if (qRec && qRecSub) {
     const rec =
@@ -1895,10 +2070,10 @@ function renderInsights() {
     qRec.textContent = rec;
     qRecSub.textContent =
       rec === "High"
-        ? "Plan extra softness today."
+        ? "Make extra room for softness today."
         : rec === "Medium"
-          ? "Keep plans lighter if you can."
-          : "A steady pace is enough.";
+          ? "Lighter plans may help your body feel more supported."
+          : "A steady pace is enough — no need to overdo it.";
   }
 
   const insReflectionTitle = $$("#insReflectionTitle");
@@ -1928,23 +2103,43 @@ function renderInsights() {
 
   const patterns = insightsFromData(periods, state.data?.checkins || {});
 
+  function patternTip(text) {
+    const s = String(text || "").toLowerCase();
+    if (s.includes("low mood") || s.includes("luteal")) {
+      return "Try planning lighter tasks, earlier wind-downs, and steadier meals during luteal days.";
+    }
+    if (s.includes("pain")) {
+      return "Consider warmth, hydration, and a gentler schedule around the days pain usually rises.";
+    }
+    if (s.includes("fertile")) {
+      return "Use this window as a soft planning cue; hydration and recovery still matter.";
+    }
+    return "Use this pattern as a gentle cue for planning, not a strict rule.";
+  }
+
   function fillPatternList(rootEl, prefixLabel) {
     if (!rootEl) return;
     rootEl.innerHTML = "";
     if (!patterns.length) {
-      const empty = $$("#insightsEmpty");
-      if (empty) rootEl.appendChild(empty);
-      else {
-        const d = document.createElement("div");
-        d.className = "micro subtle";
-        d.textContent = "Your patterns will appear here after a few check‑ins.";
-        rootEl.appendChild(d);
-      }
+      const empty = document.createElement("div");
+      empty.className = "patterns-empty";
+      empty.innerHTML = `
+        <span class="patterns-empty__icon" aria-hidden="true">${aylaIcon("energy_medium")}</span>
+        <span class="patterns-empty__copy">
+          <span class="patterns-empty__title">Patterns are still forming</span>
+          <span class="patterns-empty__body">Keep adding gentle check-ins. After a few notes, Ayla can reflect your energy rhythm back with more care.</span>
+        </span>
+      `;
+      rootEl.appendChild(empty);
       return;
     }
     patterns.forEach((t) => {
       const box = document.createElement("div");
-      box.className = "insight-card";
+      box.className = "insight-card insight-card--interactive";
+      box.tabIndex = 0;
+      box.setAttribute("role", "button");
+      box.setAttribute("aria-label", `${prefixLabel}: ${t}. ${patternTip(t)}`);
+      box.dataset.tip = patternTip(t);
       const k = document.createElement("div");
       k.className = "insight-card__k";
       k.textContent = prefixLabel;
@@ -1953,6 +2148,17 @@ function renderInsights() {
       v.textContent = t;
       box.appendChild(k);
       box.appendChild(v);
+      box.addEventListener("click", () => {
+        box.classList.toggle("is-tip-visible");
+      });
+      box.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          box.classList.toggle("is-tip-visible");
+        }
+        if (e.key === "Escape") box.classList.remove("is-tip-visible");
+      });
+      box.addEventListener("blur", () => box.classList.remove("is-tip-visible"));
       rootEl.appendChild(box);
     });
   }
@@ -2184,6 +2390,11 @@ function setChipOn(root, value) {
     const on = c.dataset.value === value;
     c.classList.toggle("is-on", on);
     c.setAttribute("aria-pressed", on ? "true" : "false");
+    if (on) {
+      c.classList.remove("chip--pop");
+      void c.offsetWidth;
+      c.classList.add("chip--pop");
+    }
   });
 }
 
@@ -2195,7 +2406,7 @@ const CHECKIN = {
 };
 
 function openCheckin(iso) {
-  checkinTitleDate.textContent = iso === toISODate(new Date()) ? "Today" : formatNiceDate(iso);
+  checkinTitleDate.textContent = iso === toISODate(new Date()) ? `Today · ${formatNiceDate(iso)}` : formatNiceDate(iso);
   const current = state.data.checkins[iso] || null;
   const model = {
     mood: current?.mood || "Okay",
@@ -2212,13 +2423,17 @@ function openCheckin(iso) {
   setChipOn(energyChips, model.energy);
   setChipOn(painChips, model.pain);
   notesEl.value = model.notes;
+  saveCheckinBtn.textContent = "Save today’s check-in";
+  saveCheckinBtn.classList.remove("is-success");
 
   deleteCheckinBtn.hidden = !current;
+  closeCheckinBtn.onclick = () => closeModal(checkinModal);
   deleteCheckinBtn.onclick = () => {
     delete state.data.checkins[iso];
     saveUserData(state.user, state.data);
     closeModal(checkinModal);
     refreshAll();
+    showCalmToast("Check-in removed. Your calendar has been updated gently.");
   };
 
   $$("#checkinForm").onsubmit = (e) => {
@@ -2230,8 +2445,11 @@ function openCheckin(iso) {
       notes: (notesEl.value || "").trim(),
     };
     saveUserData(state.user, state.data);
-    closeModal(checkinModal);
+    saveCheckinBtn.textContent = "Check-in saved ✨";
+    saveCheckinBtn.classList.add("is-success");
     refreshAll();
+    showCalmToast("Check-in saved ✨");
+    setTimeout(() => closeModal(checkinModal), 850);
   };
 
   openModal(checkinModal);
@@ -2248,6 +2466,8 @@ function showPeriodError(msg) {
 function openPeriodModal(prefillISO = null) {
   periodError.hidden = true;
   periodError.textContent = "";
+  savePeriodBtn.textContent = "Save period";
+  savePeriodBtn.classList.remove("is-success");
 
   makeChips(flowChips, FLOW, {
     tone: "rose",
@@ -2272,6 +2492,7 @@ function openPeriodModal(prefillISO = null) {
     saveUserData(state.user, state.data);
     closeModal(periodModal);
     refreshAll();
+    showCalmToast("Period log removed. Your cycle view has been refreshed.");
   };
 
   $$("#periodForm").onsubmit = (e) => {
@@ -2290,8 +2511,11 @@ function openPeriodModal(prefillISO = null) {
       sortPeriods(state.data.periods);
       saveUserData(state.user, state.data);
     }
-    closeModal(periodModal);
+    savePeriodBtn.textContent = "Period saved 🌷";
+    savePeriodBtn.classList.add("is-success");
     refreshAll();
+    showCalmToast("Period saved 🌷");
+    setTimeout(() => closeModal(periodModal), 850);
   };
 
   openModal(periodModal);

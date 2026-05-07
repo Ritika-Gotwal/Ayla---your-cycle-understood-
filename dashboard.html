@@ -201,6 +201,7 @@
               focusable="false"
               aria-label="Energy curve across your cycle"
             ></svg>
+            <div class="wave-tooltip wave-tooltip--energy-page" id="energyPageWaveTooltip" role="status" aria-live="polite" hidden></div>
           </div>
           <div class="energy-page__strip insights energy-strip">
             <div class="insight-card">
@@ -263,48 +264,11 @@
                     <span aria-hidden="true">›</span>
                   </button>
                 </div>
-                <p class="micro subtle calendar__hint">Tap a day for details.</p>
               </div>
-              <div class="calendar__dow" aria-hidden="true">
-                <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
-              </div>
-              <div class="calendar__grid" id="calendarGrid" role="grid" aria-label="Monthly calendar"></div>
-            </div>
-
-            <div class="day-panel" id="dayPanel" aria-label="Selected day details">
-              <div class="day-panel__empty subtle" id="dayPanelEmpty">
-                Select a date to see what you logged — or add a quick check‑in.
-              </div>
-              <div class="day-panel__content" id="dayPanelContent" hidden>
-                <div class="day-panel__top">
-                  <div>
-                    <div class="micro subtle">Selected</div>
-                    <div class="day-panel__date" id="selectedDateLabel">—</div>
-                  </div>
-                  <div class="pill" id="phasePill" hidden></div>
-                </div>
-
-                <div class="kvs">
-                  <div class="kv">
-                    <div class="kv__k">Period</div>
-                    <div class="kv__v" id="kvPeriod">—</div>
-                  </div>
-                  <div class="kv">
-                    <div class="kv__k">Check‑in</div>
-                    <div class="kv__v" id="kvCheckin">—</div>
-                  </div>
-                </div>
-
-                <div class="day-panel__guidance" aria-label="Gentle guidance">
-                  <div class="micro subtle day-panel__guidance-k">Guidance</div>
-                  <div class="day-panel__guidance-v" id="dayPanelTone">—</div>
-                </div>
-
-                <section class="day-panel__legend" aria-label="Cycle signals legend">
-                  <div class="day-panel__legend-head">
-                    <div class="micro subtle">Cycle signals</div>
-                  </div>
-                  <div class="day-panel__legend-items">
+              <div class="calendar__map">
+                <section class="calendar__legend" aria-label="Cycle signals legend">
+                  <div class="micro subtle calendar__legend-title">Cycle signals</div>
+                  <div class="calendar__legend-items">
                     <span class="legend-pill legend-pill--period">
                       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M12 3.2c2.7 4.2 6.6 7.6 6.6 11.8A6.6 6.6 0 0 1 12 21.6 6.6 6.6 0 0 1 5.4 15c0-4.2 3.9-7.6 6.6-11.8Z"/></svg>
                       <span>Period</span>
@@ -323,10 +287,49 @@
                     </span>
                   </div>
                 </section>
+                <div class="calendar__matrix">
+                  <div class="calendar__dow" aria-hidden="true">
+                    <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+                  </div>
+                  <div class="calendar__grid" id="calendarGrid" role="grid" aria-label="Monthly calendar"></div>
+                </div>
+              </div>
+            </div>
 
+            <div class="day-panel" id="dayPanel" aria-label="Selected day details">
+              <div class="day-panel__empty subtle" id="dayPanelEmpty">
+                Select a date to see what you logged — or add a quick check‑in.
+              </div>
+              <div class="day-panel__content" id="dayPanelContent" hidden>
                 <div class="day-panel__actions">
                   <button class="btn btn--soft js-open-checkin-today" id="quickCheckinBtn" type="button">Daily check‑in</button>
                   <button class="btn btn--soft js-open-period-today" id="quickPeriodBtn" type="button">Log period</button>
+                </div>
+
+                <div class="day-panel__stack">
+                  <div class="day-panel__top">
+                    <div>
+                      <div class="micro subtle">Selected</div>
+                      <div class="day-panel__date" id="selectedDateLabel">—</div>
+                    </div>
+                    <div class="pill" id="phasePill" hidden></div>
+                  </div>
+
+                  <div class="kvs">
+                    <div class="kv">
+                      <div class="kv__k">Period</div>
+                      <div class="kv__v" id="kvPeriod">—</div>
+                    </div>
+                    <div class="kv">
+                      <div class="kv__k">Check‑in</div>
+                      <div class="kv__v" id="kvCheckin">—</div>
+                    </div>
+                  </div>
+
+                  <div class="day-panel__guidance" aria-label="Gentle guidance">
+                    <div class="micro subtle day-panel__guidance-k">Guidance</div>
+                    <div class="day-panel__guidance-v" id="dayPanelTone">—</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -492,10 +495,11 @@
       <form method="dialog" class="modal__card" id="checkinForm">
         <div class="modal__head">
           <div>
-            <div class="micro subtle">Daily check‑in</div>
-            <div class="h3" id="checkinTitleDate">Today</div>
+            <div class="micro subtle">Daily wellness check ✨</div>
+            <div class="h3">How are you feeling today?</div>
+            <p class="micro subtle checkin-date" id="checkinTitleDate">Today</p>
           </div>
-          <button class="icon-btn" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
+          <button class="icon-btn modal__close" id="closeCheckinBtn" aria-label="Close" type="button"><span aria-hidden="true">×</span></button>
         </div>
 
         <div class="modal__body">
@@ -512,10 +516,10 @@
             <div class="chips" id="painChips" aria-label="Pain"></div>
           </div>
           <label class="field">
-            <span class="field__label">Notes (optional)</span>
-            <textarea class="field__textarea" id="notes" rows="3" placeholder="Anything you want to remember…"></textarea>
+            <span class="field__label">Anything you’d like to remember today?</span>
+            <textarea class="field__textarea" id="notes" rows="2" placeholder="A feeling, symptom, or small moment…"></textarea>
           </label>
-          <p class="micro subtle">Designed to take under 10 seconds.</p>
+          <p class="micro subtle checkin-whisper">Small daily check-ins build better self-awareness ✨</p>
         </div>
 
         <div class="modal__foot">
@@ -527,7 +531,7 @@
           </button>
           <div class="spacer"></div>
           <button class="btn btn--primary btn--ritual" id="saveCheckinBtn" value="default" type="submit">
-            Save check‑in
+            Save today’s check‑in
           </button>
         </div>
       </form>
@@ -537,10 +541,11 @@
       <form method="dialog" class="modal__card" id="periodForm">
         <div class="modal__head">
           <div>
-            <div class="micro subtle">Log period</div>
-            <div class="h3">Select dates</div>
+            <div class="micro subtle">Period tracking</div>
+            <div class="h3">Log your cycle dates</div>
+            <p class="micro subtle period-whisper">Your body’s rhythm matters 🌷</p>
           </div>
-          <button class="icon-btn" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
+          <button class="icon-btn modal__close" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
         </div>
 
         <div class="modal__body">
@@ -570,8 +575,8 @@
             <div class="chips" id="flowChips" aria-label="Flow"></div>
           </div>
 
-          <p class="micro subtle">
-            Stored only on this device. You can edit anytime.
+          <p class="micro subtle period-privacy">
+            Private to your device and always under your control.
           </p>
 
           <p class="micro error" id="periodError" role="status" aria-live="polite" hidden></p>
@@ -582,7 +587,7 @@
             <span class="btn__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M9 3.5h6m-8 3h10m-1 0-.8 13.2a2 2 0 0 1-2 1.8H10.8a2 2 0 0 1-2-1.8L8 6.5m3 3.5v8m2-8v8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
             </span>
-            Remove last
+            Remove last entry
           </button>
           <div class="spacer"></div>
           <button class="btn btn--primary btn--ritual" id="savePeriodBtn" value="default" type="submit">Save period</button>
@@ -675,16 +680,19 @@
       <form method="dialog" class="modal__card day-modal__card">
         <div class="modal__head">
           <div>
-            <div class="micro subtle" id="dayModalSubtitle">Day view</div>
+            <div class="micro subtle" id="dayModalSubtitle">Today's reflection</div>
             <div class="h3" id="dayModalDate">—</div>
           </div>
-          <button class="icon-btn" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
+          <button class="icon-btn modal__close" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">×</span></button>
         </div>
 
         <div class="modal__body day-modal__body">
-          <section class="day-block" aria-label="Day summary">
+          <section class="day-block day-block--summary" aria-label="Day summary">
             <div class="day-block__top">
-              <div class="pill" id="dayModalPhase" hidden></div>
+              <div class="day-summary__intro">
+                <div class="pill" id="dayModalPhase" hidden></div>
+                <div class="day-summary__title" id="daySummaryTitle">You checked in today 🌷</div>
+              </div>
               <div class="mini-bars" aria-label="Indicators">
                 <div class="mini-bars__item">
                   <div class="mini-bars__k">Energy</div>
@@ -693,6 +701,10 @@
                 <div class="mini-bars__item">
                   <div class="mini-bars__k">Pain</div>
                   <div class="mini-bars__bar"><div class="mini-bars__fill mini-bars__fill--rose" id="dayPainFill"></div></div>
+                </div>
+                <div class="mini-bars__item mini-bars__item--mood">
+                  <div class="mini-bars__k">Mood</div>
+                  <div class="mini-bars__mood" id="dayMoodMini">—</div>
                 </div>
               </div>
             </div>
@@ -727,7 +739,13 @@
           </section>
 
           <details class="accordion" id="dayInsightsDetails">
-            <summary class="accordion__summary">Smart insights</summary>
+            <summary class="accordion__summary">
+              <span>
+                <span class="accordion__title">Smart insights ✨</span>
+                <span class="accordion__preview" id="dayInsightsPreview">Ayla will reflect patterns as you log more.</span>
+              </span>
+              <span class="accordion__chev" aria-hidden="true">›</span>
+            </summary>
             <div class="accordion__body">
               <div class="micro subtle" id="daySmartInsightsEmpty">Not enough history yet. A few check‑ins will unlock patterns.</div>
               <div class="insight-list" id="daySmartInsights"></div>
@@ -735,14 +753,26 @@
           </details>
 
           <details class="accordion" id="dayCompareDetails">
-            <summary class="accordion__summary">Last cycle comparison</summary>
+            <summary class="accordion__summary">
+              <span>
+                <span class="accordion__title">Last cycle comparison</span>
+                <span class="accordion__preview" id="dayComparePreview">A gentle look back when history is available.</span>
+              </span>
+              <span class="accordion__chev" aria-hidden="true">›</span>
+            </summary>
             <div class="accordion__body">
               <div class="micro subtle" id="dayCompareLine">—</div>
             </div>
           </details>
 
           <details class="accordion" id="dayGuidanceDetails" open>
-            <summary class="accordion__summary">Gentle guidance</summary>
+            <summary class="accordion__summary">
+              <span>
+                <span class="accordion__title">Gentle guidance</span>
+                <span class="accordion__preview">Small awareness creates better care.</span>
+              </span>
+              <span class="accordion__chev" aria-hidden="true">›</span>
+            </summary>
             <div class="accordion__body">
               <div class="day-guidance" id="dayGuidance">—</div>
             </div>
@@ -750,9 +780,8 @@
         </div>
 
         <div class="modal__foot">
-          <button class="btn btn--ghost" value="cancel" type="submit">Close</button>
           <div class="spacer"></div>
-          <button class="btn btn--primary" id="dayDoneBtn" value="default" type="submit">Done</button>
+          <button class="btn btn--primary" id="dayDoneBtn" value="default" type="button">Done</button>
         </div>
       </form>
     </dialog>

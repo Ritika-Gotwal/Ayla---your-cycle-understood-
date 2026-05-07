@@ -218,7 +218,7 @@ function setAuthMode(mode) {
 
   authSubmit.textContent = isLogin ? "Log in" : "Create account";
   authHint.textContent = isLogin
-    ? "Tip: This app stores your data only on this device (localStorage)."
+    ? "Private by design. Your cycle data stays on your device."
     : "Create a private local account for this device.";
 
   applyFieldVisibility(fullNameField, !isLogin);
