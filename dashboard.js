@@ -400,14 +400,16 @@ function currentPhaseToday() {
   return phaseForDate(periods, iso)?.phase || null;
 }
 
-function renderPhaseCards(container, kind) {
+function renderPhaseCards(container, kind, opts = {}) {
   if (!container) return;
   const phaseToday = currentPhaseToday();
+  const onlyPhase = opts.onlyPhase || null;
   const data = kind === "food" ? FOOD_GUIDANCE : MOVE_GUIDANCE;
   const isBoard = container.id === "foodCards" || container.id === "moveCards";
   container.innerHTML = "";
 
   PHASE_ORDER.forEach((phase) => {
+    if (onlyPhase && phase !== onlyPhase) return;
     const cfg = data[phase];
     if (!cfg) return;
 
@@ -496,6 +498,24 @@ function scrollToTodayPhase(scrollEl) {
   if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+function scrollToPhaseAside(kind) {
+  const asideRoot = kind === "food" ? foodAside : moveAside;
+  if (!asideRoot) return;
+  const aside = asideRoot.closest(".phase-board__aside") || asideRoot;
+  if (!aside) return;
+  // Only auto-jump when the layout stacks (mobile/tablet).
+  if (!window.matchMedia("(max-width: 1024px)").matches) return;
+  // Wait for DOM paint after renderPhaseAside().
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      aside.scrollIntoView({ behavior: "smooth", block: "start" });
+      aside.classList.remove("is-jump");
+      void aside.offsetWidth;
+      aside.classList.add("is-jump");
+    });
+  });
+}
+
 function updateScrollFade(el) {
   if (!el) return;
   const atTop = el.scrollTop <= 1;
@@ -505,27 +525,35 @@ function updateScrollFade(el) {
 }
 
 function refreshFoodView() {
-  renderPhaseCards(foodCards, "food");
+  const phaseToday = currentPhaseToday() || "Follicular";
+  const focusToday = Boolean(foodTodayBtn?.classList.contains("is-active"));
+  if (focusToday) state.foodPhase = phaseToday;
+  renderPhaseCards(foodCards, "food", { onlyPhase: focusToday ? phaseToday : null });
   renderPhaseAside("food");
-  if (foodTodayBtn?.classList.contains("is-active")) scrollToTodayPhase(foodCards);
+  if (focusToday) scrollToTodayPhase(foodCards);
 
   $$$(".phase-card", foodCards).forEach((el) => {
     el.addEventListener("click", () => {
       state.foodPhase = el.dataset.phase || null;
       renderPhaseAside("food");
+      scrollToPhaseAside("food");
     });
   });
 }
 
 function refreshMovementView() {
-  renderPhaseCards(moveCards, "move");
+  const phaseToday = currentPhaseToday() || "Follicular";
+  const focusToday = Boolean(moveTodayBtn?.classList.contains("is-active"));
+  if (focusToday) state.movePhase = phaseToday;
+  renderPhaseCards(moveCards, "move", { onlyPhase: focusToday ? phaseToday : null });
   renderPhaseAside("move");
-  if (moveTodayBtn?.classList.contains("is-active")) scrollToTodayPhase(moveCards);
+  if (focusToday) scrollToTodayPhase(moveCards);
 
   $$$(".phase-card", moveCards).forEach((el) => {
     el.addEventListener("click", () => {
       state.movePhase = el.dataset.phase || null;
       renderPhaseAside("move");
+      scrollToPhaseAside("move");
     });
   });
 }
@@ -802,6 +830,9 @@ const dayActionPeriod = $$("#dayActionPeriod");
 const dayEnergyFill = $$("#dayEnergyFill");
 const dayPainFill = $$("#dayPainFill");
 const dayMoodMini = $$("#dayMoodMini");
+const dayEnergyLabel = $$("#dayEnergyLabel");
+const dayPainLabel = $$("#dayPainLabel");
+const dayNotesHint = $$("#dayNotesHint");
 const daySmartInsights = $$("#daySmartInsights");
 const daySmartInsightsEmpty = $$("#daySmartInsightsEmpty");
 const dayInsightsPreview = $$("#dayInsightsPreview");
@@ -812,6 +843,15 @@ const dayInsightsDetails = $$("#dayInsightsDetails");
 const dayCompareDetails = $$("#dayCompareDetails");
 const dayGuidanceDetails = $$("#dayGuidanceDetails");
 const dayDoneBtn = $$("#dayDoneBtn");
+
+if (dayInsightsDetails) {
+  dayInsightsDetails.addEventListener("toggle", () => {
+    if (!dayInsightsDetails.open) return;
+    requestAnimationFrame(() => {
+      dayInsightsDetails.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  });
+}
 
 const foodCards = $$("#foodCards");
 const moveCards = $$("#moveCards");
@@ -1912,8 +1952,13 @@ function openDayView(iso) {
   dayMood.textContent = c?.mood || "—";
   dayEnergy.textContent = c?.energy || "—";
   dayPain.textContent = c?.pain || "—";
-  dayNotes.textContent = c?.notes ? c.notes : "No notes.";
+  const hasNotes = Boolean(c?.notes && String(c.notes).trim());
+  dayNotes.textContent = hasNotes ? c.notes : "No reflections added yet.";
+  dayNotes.classList.toggle("is-placeholder", !hasNotes);
+  if (dayNotesHint) dayNotesHint.hidden = hasNotes;
   dayMoodMini.textContent = c?.mood || "—";
+  if (dayEnergyLabel) dayEnergyLabel.textContent = c?.energy || "Medium";
+  if (dayPainLabel) dayPainLabel.textContent = c?.pain || "Low";
 
   setFill(dayEnergyFill, scoreEnergy(c?.energy));
   setFill(dayPainFill, scorePain(c?.pain));
@@ -2615,6 +2660,7 @@ function init() {
   });
   foodTodayBtn?.addEventListener("click", () => {
     setSeg(foodAllBtn, foodTodayBtn, true);
+    refreshFoodView();
     scrollToTodayPhase(foodCards);
   });
 
@@ -2624,6 +2670,7 @@ function init() {
   });
   moveTodayBtn?.addEventListener("click", () => {
     setSeg(moveAllBtn, moveTodayBtn, true);
+    refreshMovementView();
     scrollToTodayPhase(moveCards);
   });
 

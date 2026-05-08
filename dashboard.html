@@ -254,17 +254,6 @@
         <section class="card card--calendar card--full" aria-label="Calendar">
           <div class="card__body card__body--calendar">
             <div class="calendar" id="calendar">
-              <div class="calendar__top">
-                <div class="cal-nav" aria-label="Calendar navigation">
-                  <button class="icon-btn" id="prevMonthBtn" type="button" aria-label="Previous month">
-                    <span aria-hidden="true">‹</span>
-                  </button>
-                  <div class="cal-title" id="calTitle" aria-live="polite"></div>
-                  <button class="icon-btn" id="nextMonthBtn" type="button" aria-label="Next month">
-                    <span aria-hidden="true">›</span>
-                  </button>
-                </div>
-              </div>
               <div class="calendar__map">
                 <section class="calendar__legend" aria-label="Cycle signals legend">
                   <div class="micro subtle calendar__legend-title">Cycle signals</div>
@@ -287,11 +276,25 @@
                     </span>
                   </div>
                 </section>
-                <div class="calendar__matrix">
-                  <div class="calendar__dow" aria-hidden="true">
-                    <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+                <div class="calendar__core">
+                  <div class="calendar__top">
+                    <div class="cal-nav" aria-label="Calendar navigation">
+                      <button class="icon-btn" id="prevMonthBtn" type="button" aria-label="Previous month">
+                        <span aria-hidden="true">‹</span>
+                      </button>
+                      <div class="cal-title" id="calTitle" aria-live="polite"></div>
+                      <button class="icon-btn" id="nextMonthBtn" type="button" aria-label="Next month">
+                        <span aria-hidden="true">›</span>
+                      </button>
+                    </div>
                   </div>
-                  <div class="calendar__grid" id="calendarGrid" role="grid" aria-label="Monthly calendar"></div>
+
+                  <div class="calendar__matrix">
+                    <div class="calendar__dow" aria-hidden="true">
+                      <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+                    </div>
+                    <div class="calendar__grid" id="calendarGrid" role="grid" aria-label="Monthly calendar"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -347,7 +350,7 @@
           <div class="card__body">
             <div class="insights-dash">
               <div class="insights-grid insights-grid--top" aria-label="Summary">
-                <div class="insight-card insight-card--summary">
+                <div class="insight-card insight-card--summary insight-card--secondary insight-card--period">
                   <div class="insight-card__k">
                     <span class="insight-card__icon insight-card__icon--period" aria-hidden="true">
                       <svg viewBox="0 0 24 24" focusable="false">
@@ -361,7 +364,7 @@
                   <div class="micro subtle" id="insNextPeriodSub">Add a period to enable predictions.</div>
                 </div>
 
-                <div class="insight-card insight-card--summary">
+                <div class="insight-card insight-card--summary insight-card--secondary insight-card--fertile">
                   <div class="insight-card__k">
                     <span class="insight-card__icon insight-card__icon--fertile" aria-hidden="true">
                       <svg viewBox="0 0 24 24" focusable="false">
@@ -375,7 +378,7 @@
                   <div class="micro subtle">Basic estimate (no temperature/ovulation tests).</div>
                 </div>
 
-                <div class="insight-card insight-card--summary">
+                <div class="insight-card insight-card--summary insight-card--primary insight-card--guidance">
                   <div class="insight-card__k">
                     <span class="insight-card__icon insight-card__icon--guidance" aria-hidden="true">
                       <svg viewBox="0 0 24 24" focusable="false">
@@ -391,22 +394,22 @@
               </div>
 
               <div class="insights-grid insights-grid--quick" aria-label="Quick insights">
-                <div class="insight-card insight-card--mini">
+                <div class="insight-card insight-card--mini insight-card--support insight-card--energy">
                   <div class="insight-card__k"><span class="insight-card__label">Energy</span></div>
                   <div class="insight-card__v" id="insQuickEnergy">—</div>
                   <div class="micro subtle" id="insQuickEnergySub">—</div>
                 </div>
-                <div class="insight-card insight-card--mini">
+                <div class="insight-card insight-card--mini insight-card--support insight-card--mood">
                   <div class="insight-card__k"><span class="insight-card__label">Mood</span></div>
                   <div class="insight-card__v" id="insQuickMood">—</div>
                   <div class="micro subtle" id="insQuickMoodSub">—</div>
                 </div>
-                <div class="insight-card insight-card--mini">
+                <div class="insight-card insight-card--mini insight-card--support insight-card--hydration">
                   <div class="insight-card__k"><span class="insight-card__label">Hydration</span></div>
                   <div class="insight-card__v" id="insQuickHydration">—</div>
                   <div class="micro subtle" id="insQuickHydrationSub">—</div>
                 </div>
-                <div class="insight-card insight-card--mini">
+                <div class="insight-card insight-card--mini insight-card--support insight-card--recovery">
                   <div class="insight-card__k"><span class="insight-card__label">Recovery</span></div>
                   <div class="insight-card__v" id="insQuickRecovery">—</div>
                   <div class="micro subtle" id="insQuickRecoverySub">—</div>
@@ -697,14 +700,17 @@
                 <div class="mini-bars__item">
                   <div class="mini-bars__k">Energy</div>
                   <div class="mini-bars__bar"><div class="mini-bars__fill" id="dayEnergyFill"></div></div>
+                  <div class="mini-bars__val" id="dayEnergyLabel">—</div>
                 </div>
                 <div class="mini-bars__item">
                   <div class="mini-bars__k">Pain</div>
                   <div class="mini-bars__bar"><div class="mini-bars__fill mini-bars__fill--rose" id="dayPainFill"></div></div>
+                  <div class="mini-bars__val" id="dayPainLabel">—</div>
                 </div>
                 <div class="mini-bars__item mini-bars__item--mood">
                   <div class="mini-bars__k">Mood</div>
                   <div class="mini-bars__mood" id="dayMoodMini">—</div>
+                  <div class="mini-bars__spacer" aria-hidden="true"></div>
                 </div>
               </div>
             </div>
@@ -728,6 +734,7 @@
               <div class="soft-card soft-card--wide">
                 <div class="soft-card__k">Notes</div>
                 <div class="soft-card__v soft-card__v--notes" id="dayNotes">No notes.</div>
+                <div class="soft-card__hint micro subtle" id="dayNotesHint" hidden>Your thoughts from today will appear here.</div>
               </div>
             </div>
             <p class="micro subtle" id="dayNoData" hidden>No data logged for this day yet.</p>
@@ -761,7 +768,12 @@
               <span class="accordion__chev" aria-hidden="true">›</span>
             </summary>
             <div class="accordion__body">
-              <div class="micro subtle" id="dayCompareLine">—</div>
+              <div class="insight-list" aria-label="Last cycle comparison insight">
+                <div class="insight-card">
+                  <div class="insight-card__k">Insight</div>
+                  <div class="insight-card__v" id="dayCompareLine">—</div>
+                </div>
+              </div>
             </div>
           </details>
 
