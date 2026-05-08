@@ -105,16 +105,86 @@
 
             <label class="field" id="passwordField">
               <span class="field__label">Password</span>
-              <input
-                class="field__input"
-                id="password"
-                name="password"
-                type="password"
-                autocomplete="current-password"
-                placeholder="Create a password (min 4 characters)"
-              />
+              <span class="field__control">
+                <input
+                  class="field__input field__input--withIcon"
+                  id="password"
+                  name="password"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="Enter your password"
+                />
+                <button
+                  class="field__iconBtn"
+                  id="passwordToggle"
+                  type="button"
+                  aria-label="Show password"
+                  aria-pressed="false"
+                >
+                  <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                    <path
+                      d="M12 5c5.7 0 10 5.6 10 7s-4.3 7-10 7S2 14.4 2 12s4.3-7 10-7Zm0 2C7.7 7 4.2 11 4.2 12S7.7 17 12 17s7.8-4 7.8-5S16.3 7 12 7Zm0 2.2A2.8 2.8 0 1 1 12 14.8a2.8 2.8 0 0 1 0-5.6Z"
+                    />
+                  </svg>
+                </button>
+              </span>
               <p class="micro error field__error" id="passwordError" role="status" aria-live="polite" hidden></p>
             </label>
+
+            <div class="auth__forgotRow" id="forgotRow">
+              <button class="text-link" id="forgotPasswordLink" type="button">Forgot password?</button>
+            </div>
+
+            <div class="signup-extra hidden" id="signupExtra" hidden aria-hidden="true">
+              <label class="field" id="securityQuestionField">
+                <span class="field__label">Security question</span>
+                <select class="field__input" id="securityQuestion" name="securityQuestion" autocomplete="off">
+                  <option value="" selected disabled>Choose a security question</option>
+                  <option value="pet">What was the name of your first pet?</option>
+                  <option value="city">What city were you born in?</option>
+                  <option value="teacher">What is the last name of a favorite teacher?</option>
+                  <option value="song">What is a song that always calms you?</option>
+                  <option value="flower">What is your favorite flower?</option>
+                </select>
+                <p class="micro error field__error" id="securityQuestionError" role="status" aria-live="polite" hidden></p>
+              </label>
+
+              <label class="field" id="securityAnswerField">
+                <span class="field__label">Answer</span>
+                <input
+                  class="field__input"
+                  id="securityAnswer"
+                  name="securityAnswer"
+                  inputmode="text"
+                  autocomplete="off"
+                  placeholder="Your answer (kept on this device)"
+                />
+                <p class="micro error field__error" id="securityAnswerError" role="status" aria-live="polite" hidden></p>
+              </label>
+
+              <label class="field" id="recoveryPinField">
+                <span class="field__label">Recovery passcode (4 digits)</span>
+                <span class="pin" role="group" aria-label="Recovery passcode">
+                  <input class="pin__box" id="recoveryPin1" inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="Digit 1" />
+                  <input class="pin__box" id="recoveryPin2" inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="Digit 2" />
+                  <input class="pin__box" id="recoveryPin3" inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="Digit 3" />
+                  <input class="pin__box" id="recoveryPin4" inputmode="numeric" autocomplete="one-time-code" maxlength="1" aria-label="Digit 4" />
+                </span>
+                <p class="micro error field__error" id="recoveryPinError" role="status" aria-live="polite" hidden></p>
+              </label>
+
+              <div class="pw-meter" id="signupPwMeter" aria-live="polite">
+                <div class="pw-meter__bar" aria-hidden="true"><span class="pw-meter__fill" id="signupPwFill"></span></div>
+                <div class="pw-meter__row">
+                  <div class="micro subtle" id="signupPwLabel">Strength</div>
+                  <div class="pw-meter__tags" aria-hidden="true">
+                    <span class="pw-tag" id="pwTagLen">8+</span>
+                    <span class="pw-tag" id="pwTagUpper">A‑Z</span>
+                    <span class="pw-tag" id="pwTagNum">0‑9</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div class="auth__meta">
               <p class="micro subtle" id="authHint">
@@ -131,6 +201,29 @@
         </div>
       </section>
     </main>
+
+    <dialog class="modal recover-modal" id="recoverModal" aria-label="Recover your account">
+      <form method="dialog" class="modal__card">
+        <div class="modal__head">
+          <div>
+            <div class="micro subtle" id="recoverKicker">Account recovery</div>
+            <div class="h3" id="recoverTitle">Recover your account</div>
+            <p class="micro subtle" id="recoverSubtitle">Enter your username to verify your identity.</p>
+          </div>
+          <button class="icon-btn" value="cancel" aria-label="Close recovery" type="submit">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+
+        <div class="modal__body" id="recoverBody">
+          <!-- Injected by auth.js -->
+        </div>
+
+        <div class="modal__foot" id="recoverFoot">
+          <!-- Injected by auth.js -->
+        </div>
+      </form>
+    </dialog>
 
     <dialog class="modal theme-modal" id="themeModal" aria-label="Choose theme">
       <form method="dialog" class="modal__card modal__card--tight">
