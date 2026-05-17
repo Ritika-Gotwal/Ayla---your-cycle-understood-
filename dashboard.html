@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -60,7 +60,7 @@
                 <path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
               </svg>
             </button>
-            <p class="topbar__greet-name" id="homeMFGreet">Hello,</p>
+            <button type="button" class="topbar__greet-name" id="homeMFGreet" aria-label="Open my profile">Hello,</button>
           </div>
           <button type="button" class="topbar__utility-btn topbar__utility-btn--notify" id="topbarNotifyBtn" hidden aria-hidden="true" tabindex="-1">
             <span class="topbar__utility-dot" id="topbarNotifyDot" aria-hidden="true"></span>
@@ -172,30 +172,51 @@
                   <div class="home-cycle-card__hero">
                     <div class="home-hero-row">
                       <div class="home-hero-stack">
-                      <div class="home-hero-main home-hero-status">
-                      <p class="home-cycle-card__kicker" id="homeCycleKicker">Current cycle</p>
+                      <div class="home-today-hero" id="homeTodayHero">
+                      <p class="home-cycle-card__kicker" id="homeCycleKicker">Today</p>
                       <h2 class="home-cycle-card__title" id="homeCyclePrimary">Your cycle</h2>
-                      <p class="home-cycle-card__meta" id="homeCycleMeta" hidden></p>
+                      <p class="home-cycle-card__state-line" id="homeCycleStateLine"></p>
+                      <p class="home-cycle-card__meaning-line visually-hidden" id="homeCycleMeaningLine" hidden aria-hidden="true"></p>
+                      <p class="home-cycle-card__meta visually-hidden" id="homeCycleMeta" hidden aria-hidden="true"></p>
                       </div>
 
-                      <div class="home-hero-glance" id="homeHeroGlance" aria-live="polite">
-                        <p class="home-hero-glance__text" id="homeHeroGlanceText"></p>
+                      <div class="home-today-progress" id="homeTodayProgress" hidden>
+                        <div class="home-today-progress__head">
+                          <p class="home-cycle-card__section-label">Today's progress</p>
+                          <div class="home-today-progress__ring" id="homeTodayProgressRing" aria-hidden="true">
+                            <svg viewBox="0 0 36 36" focusable="false">
+                              <circle class="home-today-progress__ring-bg" cx="18" cy="18" r="15.5" />
+                              <circle class="home-today-progress__ring-fill" id="homeTodayProgressRingFill" cx="18" cy="18" r="15.5" />
+                            </svg>
+                            <span class="home-today-progress__pct" id="homeTodayProgressPct">0%</span>
+                          </div>
+                        </div>
+                        <ul class="home-today-progress__steps" id="homeTodayProgressSteps"></ul>
                       </div>
+
                       <div class="home-hero-actions">
-                      <p class="home-cycle-card__section-label home-cycle-card__section-label--actions">Your next step</p>
-                      <div class="home-cycle-card__ctas" id="homeHeroCtaRow" hidden>
+                      <p class="home-cycle-card__section-label home-cycle-card__section-label--actions" id="homeHeroActionsLabel">Your next step</p>
+                      <p class="home-hero-done micro subtle visually-hidden" id="homeHeroCtaDone" hidden aria-hidden="true"></p>
+                      <div class="home-cycle-card__ctas home-cycle-card__ctas--solo" id="homeHeroCtaRow" hidden>
                         <button type="button" class="btn btn--primary home-cycle-card__cta-primary" id="homeHeroPrimaryBtn" data-home-hero-cta="">
-                          Continue
+                          Update today's check-in
                         </button>
-                        <button type="button" class="btn btn--ghost home-cycle-card__cta-secondary" id="homeHeroSecondaryBtn" data-home-hero-cta="" hidden>
-                          Later
-                        </button>
+                        <button type="button" class="btn btn--ghost home-cycle-card__cta-secondary" id="homeHeroSecondaryBtn" data-home-hero-cta="notes" hidden tabindex="-1" aria-hidden="true"></button>
                       </div>
-                      <p class="home-cycle-card__cta-support micro subtle" id="homeHeroCtaSupport" hidden></p>
+                      <div class="home-hero-complete" id="homeHeroCompleteBadge" hidden role="status" aria-live="polite">
+                        <span class="home-hero-complete__mark" aria-hidden="true">✓</span>
+                        <span class="home-hero-complete__text">Today's essentials completed</span>
+                      </div>
+                      </div>
+
+                      <div class="home-hero-upcoming" id="homeHeroUpcoming" aria-label="Coming next" hidden>
+                      <p class="home-cycle-card__section-label">Coming next</p>
+                      <div class="home-upcoming-list" id="homeUpcomingList"></div>
                       </div>
 
                       <div class="home-hero-journey home-cycle-card__metrics" id="homeCycleMetrics">
-                      <p class="home-cycle-card__section-label">Where you are in your cycle</p>
+                      <p class="home-cycle-card__section-label">Cycle journey</p>
+                      <div class="home-cycle-track" id="homeCycleTrack" aria-hidden="true"></div>
                       <div class="home-cycle-card__phase-strip home-cycle-card__phase-timeline" id="homeCyclePhaseStrip" aria-label="Cycle phases">
                         <span class="home-cycle-card__phase-chip" data-strip-phase="Period">
                           <span class="home-cycle-card__phase-ico" data-phase-icon="period"></span>
@@ -229,17 +250,14 @@
                         <div class="home-cycle-card__bar-fill" id="homeCycleBarFill"></div>
                       </div>
                       <p class="home-cycle-card__prog-head" id="homeCycleProgHead" aria-live="polite"></p>
+                      <p class="home-cycle-card__next-phase micro subtle" id="homeCycleNextPhase" aria-live="polite"></p>
                       </div>
 
-                      <p class="home-cycle-card__today-lead home-cycle-card__support" id="homeCycleTodayLead"></p>
+                      <p class="visually-hidden" id="homeCycleTodayLead" aria-hidden="true"></p>
                       <p class="visually-hidden" id="homeCycleTodaySub" aria-hidden="true"></p>
-                      <p class="home-cycle-card__sub visually-hidden" id="homeCycleSecondary" aria-hidden="true"></p>
-
-                      <div class="home-hero-forecast home-cycle-card__predict" id="homeHeroFuture" aria-label="Future predictions">
-                      <p class="home-cycle-card__predict-label">Estimated next period</p>
-                      <p class="home-cycle-card__predict-line" id="homeCycleDateNext"></p>
-                      <p class="home-cycle-card__predict-conf micro subtle" id="homeCycleConfLine" hidden></p>
-                      </div>
+                      <p class="visually-hidden" id="homeCycleSecondary" aria-hidden="true"></p>
+                      <p class="visually-hidden" id="homeCycleDateNext" aria-hidden="true"></p>
+                      <p class="visually-hidden" id="homeCycleConfLine" hidden aria-hidden="true"></p>
 
                       <section class="home-orb-panel home-orb-panel--hero home-orb-panel--centered" id="homeOrbPanel" aria-label="Cycle rhythm visualization" hidden>
                   <div class="home-orb-panel__inner">
@@ -333,47 +351,63 @@
               </div>
             </div>
 
-            <aside class="home-layout__col home-layout__col--right home-right-panel home-right-panel--premium" aria-label="Today's log">
+            <aside class="home-layout__col home-layout__col--right home-right-panel home-right-panel--premium" aria-label="Health snapshot and pending logs">
               <section class="home-snap home-snap--today" aria-labelledby="homeSnapHeading">
-                <h3 class="home-right-panel__title" id="homeSnapHeading">Today</h3>
-                <div class="home-today-card home-today-card--metrics" role="group" aria-label="Today's wellness snapshot">
-                  <button type="button" class="home-metric" id="homeSnapMoodBtn" aria-label="Update mood">
-                    <span class="home-icon-wrap home-metric__icon home-icon-wrap--mood" data-home-icon="mood"></span>
-                    <span class="home-metric__lab">Mood</span>
-                    <span class="home-metric__val" id="homeSnapMoodVal">�</span>
-                  </button>
-                  <button type="button" class="home-metric" id="homeSnapEnergyBtn" aria-label="Update energy">
-                    <span class="home-icon-wrap home-metric__icon home-icon-wrap--energy" data-home-icon="energy"></span>
-                    <span class="home-metric__lab">Energy</span>
-                    <span class="home-metric__val" id="homeSnapEnergyVal">�</span>
-                  </button>
-                  <button type="button" class="home-metric" id="homeSnapSleepBtn" aria-label="Update sleep">
-                    <span class="home-icon-wrap home-metric__icon home-icon-wrap--sleep" data-home-icon="sleep"></span>
-                    <span class="home-metric__lab">Sleep</span>
-                    <span class="home-metric__val" id="homeSnapSleepVal">�</span>
-                  </button>
-                  <button type="button" class="home-metric" id="homeSnapWaterBtn" aria-label="Adjust water">
-                    <span class="home-icon-wrap home-metric__icon home-icon-wrap--water" data-home-icon="water"></span>
-                    <span class="home-metric__lab">Water</span>
-                    <span class="home-metric__val" id="homeSnapWaterVal">�</span>
-                  </button>
-                  <button type="button" class="home-metric home-metric--wide" id="homeSnapSymptomsBtn" aria-label="Log symptoms">
-                    <span class="home-icon-wrap home-metric__icon home-icon-wrap--symptoms" data-home-icon="symptoms"></span>
-                    <span class="home-metric__lab">Symptoms</span>
-                    <span class="home-metric__val" id="homeSnapSymptomsVal">�</span>
-                  </button>
+                <header class="home-snap-panel__header" id="homeSnapHeading">
+                  <div class="home-snap-panel__heading">
+                    <span class="home-snap-panel__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" focusable="false">
+                        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M5 8V6a1 1 0 0 1 1-1h1M5 16v2a1 1 0 0 0 1 1h1M18 7h1a1 1 0 0 1 1 1v1M18 16h1a1 1 0 0 0 1-1v-1" />
+                        <path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M8 7h8l1.4 2H20a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10a1 1 0 0 1 1-1h3.6L8 7z" />
+                        <circle cx="12" cy="13" r="2.75" fill="none" stroke="currentColor" stroke-width="1.5" />
+                        <circle cx="18" cy="9" r="0.75" fill="currentColor" />
+                      </svg>
+                    </span>
+                    <span class="home-snap-panel__title">Today's Snapshot</span>
+                  </div>
+                </header>
+                <div class="home-snapshot-grid" role="group" aria-label="Today's health snapshot">
+                  <div class="home-snapshot-item home-snapshot-item--mood">
+                    <span class="home-snapshot-item__lab">Mood</span>
+                    <span class="home-snapshot-item__val" id="homeSnapMoodVal">—</span>
+                  </div>
+                  <div class="home-snapshot-item home-snapshot-item--sleep">
+                    <span class="home-snapshot-item__lab">Sleep</span>
+                    <span class="home-snapshot-item__val" id="homeSnapSleepVal">—</span>
+                  </div>
+                  <div class="home-snapshot-item home-snapshot-item--energy">
+                    <span class="home-snapshot-item__lab">Energy</span>
+                    <span class="home-snapshot-item__val" id="homeSnapEnergyVal">—</span>
+                  </div>
+                  <div class="home-snapshot-item home-snapshot-item--water">
+                    <span class="home-snapshot-item__lab">Water</span>
+                    <span class="home-snapshot-item__val" id="homeSnapWaterVal">—</span>
+                  </div>
+                  <div class="home-snapshot-item home-snapshot-item--flow">
+                    <span class="home-snapshot-item__lab">Flow</span>
+                    <span class="home-snapshot-item__val" id="homeSnapFlowVal">—</span>
+                  </div>
+                  <div class="home-snapshot-item home-snapshot-item--symptoms">
+                    <span class="home-snapshot-item__lab">Symptoms</span>
+                    <span class="home-snapshot-item__val" id="homeSnapSymptomsVal">—</span>
+                  </div>
                 </div>
               </section>
 
-              <div class="home-right-panel__balance" aria-hidden="true"></div>
-
               <section class="home-quicklog home-quicklog--panel" aria-labelledby="homeQuicklogHeading">
-                <h3 class="home-right-panel__title home-quicklog__title" id="homeQuicklogHeading">Quick log</h3>
-                <div class="home-quicklog__intro">
-                  <p class="home-quicklog__intro-lead" id="homeQuicklogGuideLead">How are you feeling today?</p>
-                  <p class="home-quicklog__intro-sub" id="homeQuicklogGuideSub">Small updates help Ayla understand your rhythm.</p>
+                <h3 class="home-right-panel__title home-quicklog__title visually-hidden" id="homeQuicklogHeading">Today's logging</h3>
+                <div class="home-quicklog__status" id="homeQuicklogStatus">
+                  <div class="home-quicklog__block" id="homeQuicklogCompletedBlock" hidden>
+                    <p class="home-quicklog__section-label" id="homeQuicklogCompletedLabel">Completed today</p>
+                    <ul class="home-quicklog__completed-list" id="homeQuicklogCompletedList"></ul>
+                  </div>
+                  <div class="home-quicklog__block" id="homeQuicklogUpdatingBlock">
+                    <p class="home-quicklog__section-label" id="homeQuicklogUpdatingLabel">Still updating today</p>
+                    <div class="home-quicklog__updating-list" id="homeQuicklogUpdatingList" role="list" aria-label="Still updating today"></div>
+                  </div>
                 </div>
-                <div class="home-quicklog__grid" id="homeQuickLogRow" role="toolbar" aria-label="Quick log actions"></div>
+                <div class="home-quicklog__grid visually-hidden" id="homeQuickLogRow" hidden aria-hidden="true"></div>
+                <p class="home-quicklog__empty micro subtle visually-hidden" id="homeQuicklogEmpty" hidden aria-hidden="true"></p>
               </section>
             </aside>
           </div>
@@ -897,7 +931,6 @@
     <footer class="app-footer" role="contentinfo">
       <p class="app-footer__tagline">Designed to move gently with your rhythm.</p>
       <nav class="app-footer__nav" aria-label="Utilities">
-        <button class="btn btn--ghost btn--compact app-footer__link" id="themeBtn" type="button">Themes</button>
         <button class="btn btn--ghost btn--compact app-footer__link" id="footerPrivacyBtn" type="button">Privacy</button>
         <button class="btn btn--ghost btn--compact app-footer__link" id="logoutBtn" type="button">Log out</button>
       </nav>
@@ -1069,9 +1102,13 @@
           <div>
             <div class="micro subtle">Today</div>
             <div class="h3">Mood check-in</div>
-            <p class="micro subtle">One tap � you can change this anytime.</p>
+            <p class="micro subtle">One tap — you can change this anytime.</p>
           </div>
-          <button type="button" class="icon-btn modal__close" data-home-sheet-close aria-label="Close"><span aria-hidden="true">�</span></button>
+          <button type="button" class="icon-btn modal__close modal__close--ayla" data-home-sheet-close aria-label="Close">
+            <svg class="modal__close-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
         </div>
         <div class="modal__body">
           <div class="home-sheet__chips" id="homeSheetMoodRoot" role="group" aria-label="Mood options"></div>
@@ -1087,7 +1124,11 @@
             <div class="h3">Energy</div>
             <p class="micro subtle">Where is your body today?</p>
           </div>
-          <button type="button" class="icon-btn modal__close" data-home-sheet-close aria-label="Close"><span aria-hidden="true">�</span></button>
+          <button type="button" class="icon-btn modal__close modal__close--ayla" data-home-sheet-close aria-label="Close">
+            <svg class="modal__close-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
         </div>
         <div class="modal__body">
           <div class="home-sheet__chips" id="homeSheetEnergyRoot" role="group" aria-label="Energy options"></div>
@@ -1101,9 +1142,13 @@
           <div>
             <div class="micro subtle">Today</div>
             <div class="h3">Sleep</div>
-            <p class="micro subtle">Rough hours are enough � no perfection needed.</p>
+            <p class="micro subtle">Rough hours are enough — no perfection needed.</p>
           </div>
-          <button type="button" class="icon-btn modal__close" data-home-sheet-close aria-label="Close"><span aria-hidden="true">�</span></button>
+          <button type="button" class="icon-btn modal__close modal__close--ayla" data-home-sheet-close aria-label="Close">
+            <svg class="modal__close-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
         </div>
         <div class="modal__body">
           <div class="group__label">Rest last night</div>
@@ -1119,16 +1164,59 @@
         <div class="modal__head">
           <div>
             <div class="micro subtle">Hydration</div>
-            <div class="h3">Water today</div>
-            <p class="micro subtle" id="homeWaterSheetCount">�</p>
+            <div class="h3">Water</div>
           </div>
-          <button type="button" class="icon-btn modal__close" data-home-sheet-close aria-label="Close"><span aria-hidden="true">�</span></button>
+          <button type="button" class="icon-btn modal__close modal__close--ayla" data-home-sheet-close aria-label="Close">
+            <svg class="modal__close-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
         </div>
         <div class="modal__body home-sheet--water">
-          <div class="home-sheet__water-controls">
-            <button type="button" class="btn btn--soft" id="homeWaterMinusBtn" aria-label="Remove one glass">��</button>
-            <button type="button" class="btn btn--primary" id="homeWaterPlusBtn" aria-label="Add one glass">+ glass</button>
+          <div class="home-sheet__water-stepper" role="group" aria-label="Glasses of water today">
+            <button type="button" class="home-water-stepper__btn home-water-stepper__btn--minus" id="homeWaterMinusBtn" aria-label="Remove one glass">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <path fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" d="M6 12h12" />
+              </svg>
+            </button>
+            <p class="home-water-stepper__readout" id="homeWaterSheetReadout" aria-live="polite">
+              <span class="home-water-stepper__value" id="homeWaterSheetCount">0</span>
+              <span class="home-water-stepper__unit" id="homeWaterSheetUnit">Glasses</span>
+            </p>
+            <button type="button" class="home-water-stepper__btn home-water-stepper__btn--plus" id="homeWaterPlusBtn" aria-label="Add one glass">
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <path fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" d="M12 6v12M6 12h12" />
+              </svg>
+            </button>
           </div>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="modal modal--home-sheet" id="homeJournalSheet" aria-label="Add note">
+      <div class="modal__card modal__card--tight home-sheet home-sheet--journal">
+        <div class="modal__head">
+          <div>
+            <div class="h3">Add note</div>
+            <p class="micro subtle home-journal__lede">Save what you feel today, anything you want to remember, notice, or come back to later.</p>
+            <p class="micro subtle home-journal__date" id="homeJournalDate">Today</p>
+          </div>
+          <button type="button" class="icon-btn modal__close modal__close--ayla" data-home-sheet-close aria-label="Close">
+            <svg class="modal__close-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
+        <div class="modal__body home-journal__body">
+          <label class="home-journal__field">
+            <span class="visually-hidden">Your note for today</span>
+            <textarea class="home-journal__textarea" id="homeJournalNoteInput" rows="10" placeholder="Write anything here…"></textarea>
+          </label>
+        </div>
+        <div class="modal__foot home-sheet__foot">
+          <button type="button" class="btn btn--ghost" data-home-sheet-close>Cancel</button>
+          <div class="spacer"></div>
+          <button type="button" class="btn btn--primary" id="homeJournalSaveBtn">Save note</button>
         </div>
       </div>
     </dialog>
@@ -1139,16 +1227,26 @@
           <div>
             <div class="micro subtle">Body signals</div>
             <div class="h3">Symptoms</div>
-            <p class="micro subtle">Tap what�"s true � combine freely.</p>
+            <p class="micro subtle">Tap what's true — combine freely.</p>
           </div>
-          <button type="button" class="icon-btn modal__close" data-home-sheet-close aria-label="Close"><span aria-hidden="true">�</span></button>
+          <button type="button" class="icon-btn modal__close modal__close--ayla" data-home-sheet-close aria-label="Close">
+            <svg class="modal__close-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
         </div>
         <div class="modal__body">
           <label class="field">
             <span class="field__label">Search</span>
-            <input class="field__input" type="search" id="homeSheetSymptomSearch" placeholder="Filter⬦" autocomplete="off" />
+            <input class="field__input" type="search" id="homeSheetSymptomSearch" placeholder="Filter symptoms" autocomplete="off" />
           </label>
           <div class="home-sheet__chips" id="homeSheetSymptomsRoot" role="group" aria-label="Symptoms"></div>
+          <p class="home-sheet__none-hint micro subtle" id="homeSheetSymptomNoneHint" hidden>
+            <svg class="home-sheet__none-hint-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.2 4.2L19 7" />
+            </svg>
+            No symptoms logged today.
+          </p>
           <p class="micro subtle" id="homeSheetSymptomRecent" hidden></p>
         </div>
         <div class="modal__foot home-sheet__foot">
@@ -1166,7 +1264,11 @@
             <div class="micro subtle">Period</div>
             <div class="h3" id="homePeriodAdaptiveHeadline">Your rhythm</div>
           </div>
-          <button type="button" class="icon-btn modal__close" data-home-sheet-close aria-label="Close"><span aria-hidden="true">�</span></button>
+          <button type="button" class="icon-btn modal__close modal__close--ayla" data-home-sheet-close aria-label="Close">
+            <svg class="modal__close-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
         </div>
         <div class="modal__body" id="homePeriodAdaptiveRoot"></div>
       </div>
@@ -1180,7 +1282,11 @@
             <div class="h3">Flow today</div>
             <p class="micro subtle">Under three seconds � or open full dates when you�"re ready.</p>
           </div>
-          <button type="button" class="icon-btn modal__close" data-home-sheet-close aria-label="Close"><span aria-hidden="true">�</span></button>
+          <button type="button" class="icon-btn modal__close modal__close--ayla" data-home-sheet-close aria-label="Close">
+            <svg class="modal__close-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
         </div>
         <div class="modal__body">
           <div class="home-sheet__chips" id="homeSheetPeriodFlowRoot" role="group" aria-label="Flow intensity"></div>
@@ -1230,23 +1336,129 @@
             <div class="micro subtle">Privacy</div>
             <div class="h3">Your data stays on your device</div>
           </div>
-          <button class="icon-btn" value="cancel" aria-label="Close" type="submit"><span aria-hidden="true">�</span></button>
+          <button type="submit" class="icon-btn modal__close modal__close--ayla" value="cancel" aria-label="Close">
+            <svg class="modal__close-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
         </div>
         <div class="modal__body">
-          <ul class="list">
+          <ul class="list privacy-modal__list">
             <li>No external APIs</li>
             <li>No analytics</li>
-            <li>No account recovery</li>
-            <li>Everything is stored in your browser�"s <span class="mono">localStorage</span></li>
+            <li>No account recovery available</li>
+            <li>Everything is stored in your browser's local storage.</li>
           </ul>
-          <p class="micro subtle">
-            If you clear site data or switch browsers/devices, your data won�"t follow.
+          <p class="privacy-modal__notice">
+            If you clear browser data or switch devices, your information won't automatically move with you.
           </p>
         </div>
         <div class="modal__foot">
           <div class="spacer"></div>
           <button class="btn btn--primary" value="default" type="submit">Got it</button>
         </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal modal--profile" id="profileModal" aria-label="My Profile">
+      <form class="modal__card modal__card--profile" id="profileModalForm" method="dialog" novalidate>
+        <header class="profile-modal__head">
+          <div class="profile-modal__intro">
+            <span class="profile-modal__avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="22" height="22" focusable="false" aria-hidden="true">
+                <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" fill="none" stroke="currentColor" stroke-width="1.6" />
+                <path d="M5 20a7 7 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              </svg>
+            </span>
+            <div>
+              <h2 class="profile-modal__title">My Profile</h2>
+              <p class="profile-modal__subtitle">Update your details anytime.</p>
+            </div>
+          </div>
+          <button type="button" class="icon-btn modal__close modal__close--ayla" id="profileModalClose" aria-label="Close">
+            <svg class="modal__close-icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </header>
+        <div class="modal__body profile-modal__body">
+          <section class="profile-modal__section" aria-labelledby="profilePersonalHeading">
+            <h3 class="profile-modal__section-title" id="profilePersonalHeading">Personal details</h3>
+            <label class="profile-field">
+              <span class="profile-field__label">What can we call you?</span>
+              <input class="profile-field__input" type="text" id="profileDisplayName" name="displayName" maxlength="80" autocomplete="nickname" placeholder="First name or nickname" />
+            </label>
+            <label class="profile-field">
+              <span class="profile-field__label">Date of birth</span>
+              <input class="profile-field__input" type="date" id="profileDateOfBirth" name="dateOfBirth" />
+            </label>
+            <label class="profile-field">
+              <span class="profile-field__label">Cycle length</span>
+              <input class="profile-field__input" type="number" id="profileCycleLength" name="cycleLength" min="15" max="60" step="1" />
+            </label>
+            <label class="profile-field">
+              <span class="profile-field__label">Average period length</span>
+              <input class="profile-field__input" type="number" id="profilePeriodLength" name="periodLength" min="2" max="10" step="1" />
+            </label>
+            <label class="profile-field">
+              <span class="profile-field__label">Last period date</span>
+              <input class="profile-field__input" type="date" id="profileLastPeriod" name="lastPeriod" />
+            </label>
+            <fieldset class="profile-field profile-field--goals" id="profileGoalsField">
+              <legend class="profile-field__label">Goals / preferences</legend>
+              <div class="profile-goals">
+                <label class="profile-goal"><input type="checkbox" name="goals" value="symptoms" /> Track symptoms</label>
+                <label class="profile-goal"><input type="checkbox" name="goals" value="understand" /> Understand cycle</label>
+                <label class="profile-goal"><input type="checkbox" name="goals" value="wellness" /> Improve wellness</label>
+                <label class="profile-goal"><input type="checkbox" name="goals" value="pregnancy" /> Pregnancy planning</label>
+                <label class="profile-goal"><input type="checkbox" name="goals" value="patterns" /> Learn patterns</label>
+              </div>
+            </fieldset>
+          </section>
+          <section class="profile-modal__section" aria-labelledby="profilePrefsHeading">
+            <h3 class="profile-modal__section-title" id="profilePrefsHeading">Account preferences</h3>
+            <label class="profile-toggle-row profile-toggle-row--explained">
+              <span class="profile-toggle-row__copy">
+                <span class="profile-toggle-row__text">Notifications</span>
+                <span class="profile-toggle-row__hint">Gentle prompts and updates on this device.</span>
+              </span>
+              <input class="profile-toggle-row__input" type="checkbox" id="profileNotifications" name="notifications" />
+              <span class="profile-toggle-row__track" aria-hidden="true"></span>
+            </label>
+            <label class="profile-field">
+              <span class="profile-field__label">Reminder time</span>
+              <input class="profile-field__input" type="time" id="profileReminderTime" name="reminderTime" />
+            </label>
+            <label class="profile-toggle-row profile-toggle-row--explained">
+              <span class="profile-toggle-row__copy">
+                <span class="profile-toggle-row__text">Auto-save notes</span>
+                <span class="profile-toggle-row__hint">Save notes automatically while writing.</span>
+              </span>
+              <input class="profile-toggle-row__input" type="checkbox" id="profileAutoSaveNotes" name="autoSaveNotes" />
+              <span class="profile-toggle-row__track" aria-hidden="true"></span>
+            </label>
+            <label class="profile-toggle-row profile-toggle-row--explained">
+              <span class="profile-toggle-row__copy">
+                <span class="profile-toggle-row__text">Cycle reminders</span>
+                <span class="profile-toggle-row__hint">Receive gentle reminders for logs and cycle updates.</span>
+              </span>
+              <input class="profile-toggle-row__input" type="checkbox" id="profileCycleReminders" name="cycleReminders" />
+              <span class="profile-toggle-row__track" aria-hidden="true"></span>
+            </label>
+          </section>
+          <section class="profile-modal__section profile-modal__section--actions" aria-label="Quick actions">
+            <h3 class="profile-modal__section-title">Quick actions</h3>
+            <div class="profile-quick-actions">
+              <button type="button" class="profile-quick-actions__btn" id="profileResetOnboardingBtn">Reset onboarding</button>
+              <button type="button" class="profile-quick-actions__btn" id="profileExportBtn">Export data</button>
+              <button type="button" class="profile-quick-actions__btn profile-quick-actions__btn--danger" id="profileDeleteDataBtn">Delete all data</button>
+            </div>
+          </section>
+        </div>
+        <footer class="modal__foot profile-modal__foot">
+          <button type="button" class="btn btn--ghost" id="profileCancelBtn">Cancel</button>
+          <button type="submit" class="btn btn--primary" id="profileSaveBtn">Save changes</button>
+        </footer>
       </form>
     </dialog>
 

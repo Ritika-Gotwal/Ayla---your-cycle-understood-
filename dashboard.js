@@ -106,6 +106,11 @@ function formatNiceDate(iso) {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
+function formatJournalSheetDate(iso) {
+  const nice = formatNiceDate(iso);
+  return iso === toISODate(new Date()) ? `Today · ${nice}` : nice;
+}
+
 function formatMonthDay(iso) {
   if (!iso) return "—";
   const d = parseISODate(iso);
@@ -123,10 +128,64 @@ function emptyUserData() {
     },
     /** First-time guided ritual; legacy data without the key is treated as complete in loadUserData. */
     onboardingComplete: false,
+    userProfile: {
+      dateOfBirth: null,
+      goals: [],
+      notificationsEnabled: true,
+      reminderTime: "09:00",
+      autoSaveNotes: true,
+      cycleRemindersEnabled: true,
+    },
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 }
+
+const PROFILE_GOAL_OPTIONS = [
+  { id: "symptoms", label: "Track symptoms" },
+  { id: "understand", label: "Understand cycle" },
+  { id: "wellness", label: "Improve wellness" },
+  { id: "pregnancy", label: "Pregnancy planning" },
+  { id: "patterns", label: "Learn patterns" },
+];
+
+function defaultUserProfile() {
+  return {
+    dateOfBirth: null,
+    goals: [],
+    notificationsEnabled: true,
+    reminderTime: "09:00",
+    autoSaveNotes: true,
+    cycleRemindersEnabled: true,
+  };
+}
+
+function ensureUserProfile(data) {
+  if (!data) return defaultUserProfile();
+  if (!data.userProfile || typeof data.userProfile !== "object") {
+    data.userProfile = defaultUserProfile();
+  }
+  const p = data.userProfile;
+  if (!Array.isArray(p.goals)) p.goals = [];
+  if (typeof p.notificationsEnabled !== "boolean") p.notificationsEnabled = true;
+  if (!p.reminderTime || typeof p.reminderTime !== "string") p.reminderTime = "09:00";
+  if (typeof p.autoSaveNotes !== "boolean") p.autoSaveNotes = true;
+  if (typeof p.cycleRemindersEnabled !== "boolean") {
+    p.cycleRemindersEnabled = p.notificationsEnabled !== false;
+  }
+  if ("privacyMode" in p) delete p.privacyMode;
+  if ("reduceAnimations" in p) delete p.reduceAnimations;
+  if (p.dateOfBirth != null && typeof p.dateOfBirth !== "string") p.dateOfBirth = null;
+  return p;
+}
+
+function applyNotificationPrefs() {
+  const prof = state.data ? ensureUserProfile(state.data) : defaultUserProfile();
+  const enabled = prof.notificationsEnabled !== false;
+  if (!enabled) localStorage.setItem("ayla_notify_demo", "0");
+  else localStorage.removeItem("ayla_notify_demo");
+}
+
 
 function loadUserData(username) {
   const key = LS.dataKey(username);
@@ -140,6 +199,7 @@ function loadUserData(username) {
   if (!data.cyclePrefs.cycleLength) data.cyclePrefs.cycleLength = 28;
   if (!data.cyclePrefs.periodDuration) data.cyclePrefs.periodDuration = 5;
   if (!("onboardingComplete" in data)) data.onboardingComplete = true;
+  ensureUserProfile(data);
   return data;
 }
 
@@ -1108,20 +1168,27 @@ function homeCycleDateLines(info, iso, periods) {
 function formatWaterGlassCount(n) {
   const x = Number(n);
   if (!Number.isFinite(x) || x < 0) return "—";
-  if (x === 1) return "1 Cup";
-  return `${Math.round(x)} Cups`;
+  if (x === 1) return "1 Glass";
+  return `${Math.round(x)} Glasses`;
+}
+
+function getTodayWaterGlassCount() {
+  const iso = toISODate(new Date());
+  const cur = Number(state.data?.checkins?.[iso]?.waterGlasses);
+  return Number.isFinite(cur) ? clamp(Math.round(cur), 0, 12) : 0;
 }
 
 function homeWaterVal(iso) {
   const c = state.data?.checkins?.[iso];
   if (c && typeof c.waterGlasses === "number") return formatWaterGlassCount(c.waterGlasses);
-  if (dayHasPeriod(iso)) return "0 Cups";
+  if (dayHasPeriod(iso)) return "0 Glasses";
   return "—";
 }
 
 function homeSymptomsSnapshot(iso) {
   const c = state.data?.checkins?.[iso];
   const sy = Array.isArray(c?.symptoms) ? c.symptoms.filter(Boolean) : [];
+  if (!sy.length && c?.symptomsNone) return "None";
   if (!sy.length) return dayHasPeriod(iso) ? "None yet" : "—";
   if (sy.length === 1) return sy[0];
   return `${sy[0]} +${sy.length - 1}`;
@@ -1168,7 +1235,7 @@ function appendTodaySymptom(sym) {
   const iso = toISODate(new Date());
   const prev = state.data.checkins[iso] || {};
   const s = new Set([...(Array.isArray(prev.symptoms) ? prev.symptoms.filter(Boolean) : []), sym]);
-  state.data.checkins[iso] = { ...prev, symptoms: [...s] };
+  state.data.checkins[iso] = { ...prev, symptoms: [...s], symptomsNone: false };
   saveUserData(state.user, state.data);
   showCalmToast("Noted gently.");
   refreshAll();
@@ -1274,93 +1341,38 @@ function homeNextPeriodConfidenceLabel(iso) {
 
 function buildHomeTodayCardContent(iso, phase, w, info, rhythmTier) {
   if (rhythmTier === "cold") {
-    return {
-      lead: "Start with how you feel today.",
-      bullets: [
-        { icon: "🌸", text: "No perfect memory needed" },
-        { icon: "📝", text: "One gentle log is enough" },
-      ],
-    };
+    return ["One gentle log is enough", "No perfect memory needed"];
   }
   if (rhythmTier === "learning") {
-    return {
-      lead: "Your rhythm is taking shape.",
-      bullets: [
-        { icon: "🌷", text: "Keep logging at your pace" },
-        { icon: "✨", text: "Forecasts stay soft for now" },
-      ],
-    };
+    return ["Forecasts stay soft for now", "Keep logging at your pace"];
   }
   const ph = phase || "Period";
-  const leadByPhase = {
-    Period: "Rest and warmth during Period phase",
-    Follicular: "Energy returning during Follicular phase",
-    Ovulation: "Bright window during Ovulation phase",
-    Luteal: "Softer bandwidth during Luteal phase",
-  };
-  const bulletsByPhase = {
-    Period: [
-      { icon: "☀", text: "Warmth and hydration often help" },
-      { icon: "💧", text: "Water supports recovery" },
-      { icon: "🚶", text: "Gentle movement over pushing" },
-    ],
-    Follicular: [
-      { icon: "☀", text: "Focus tasks may feel easier" },
-      { icon: "💧", text: "Water supports energy" },
-      { icon: "🚶", text: "Gentle movement can help" },
-    ],
-    Ovulation: [
-      { icon: "☀", text: "Notice what feels strong" },
-      { icon: "💧", text: "Hydrate between bright pushes" },
-      { icon: "🚶", text: "Balance energy with recovery" },
-    ],
-    Luteal: [
-      { icon: "☀", text: "Steadier meals can steady mood" },
-      { icon: "💧", text: "Sips through the afternoon" },
-      { icon: "🚶", text: "Earlier wind-down may help" },
-    ],
-  };
-  if (w.symptoms?.includes("Cramps")) {
-    return {
-      lead: "Cramps noted — ease-first today.",
-      bullets: [
-        { icon: "☀", text: "Warmth and slow breaths help" },
-        { icon: "💧", text: "Hydration through the day" },
-        { icon: "🚶", text: "Keep plans lighter if you can" },
-      ],
-    };
-  }
-  if (w.energy === "Low") {
-    return {
-      lead: pickHomeLine(iso, "today-low", ["Softer energy today — pace is enough.", "A slower rhythm still counts."]),
-      bullets: (bulletsByPhase[ph] || bulletsByPhase.Follicular).slice(0, 3),
-    };
-  }
-  return {
-    lead: leadByPhase[ph] || "Today in your cycle.",
-    bullets: (bulletsByPhase[ph] || bulletsByPhase.Follicular).slice(0, 3),
-  };
+  const bullets = [];
+  if (w.energy === "Low" || w.symptoms?.includes("Fatigue")) bullets.push("Energy may feel softer");
+  else if (ph === "Follicular" || ph === "Ovulation") bullets.push("Energy may feel brighter");
+  if (w.symptoms?.includes("Cramps")) bullets.push("Gentle movement preferred");
+  else if (ph === "Period") bullets.push("Gentle movement preferred");
+  if (ph === "Luteal") bullets.push("Cravings may increase");
+  bullets.push("Hydration may help today");
+  return [...new Set(bullets)].slice(0, 3);
+}
+
+function homeGuidancePunctuate(text) {
+  const t = String(text || "").trim();
+  if (!t) return t;
+  return /[.!?]$/.test(t) ? t : `${t}.`;
 }
 
 function renderHomeTodayCard(iso, phase, w, info, rhythmTier) {
-  const card = $$("#homeTodayCard");
-  const heading = $$("#homeTodayHeading");
-  const leadEl = $$("#homeTodayLead");
   const listEl = $$("#homeTodayList");
-  if (!card || !leadEl || !listEl) return;
-  if (heading) {
-    const titleEl = heading.querySelector(".home-guidance-panel__title") || heading;
-    titleEl.textContent = "Today's guidance";
-  }
-  const { lead, bullets } = buildHomeTodayCardContent(iso, phase, w, info, rhythmTier);
-  leadEl.textContent = lead;
-  listEl.innerHTML = "";
-  bullets.slice(0, 3).forEach(({ icon, text }) => {
-    const li = document.createElement("li");
-    li.className = "home-today-card__item";
-    li.innerHTML = `<span class="home-today-card__bullet" aria-hidden="true">•</span><span class="home-today-card__text">${text}</span>`;
-    listEl.appendChild(li);
-  });
+  if (!listEl) return;
+  const bullets = buildHomeTodayCardContent(iso, phase, w, info, rhythmTier);
+  listEl.innerHTML = bullets
+    .map(
+      (t) =>
+        `<li class="home-today-card__item"><span class="home-today-card__bullet" aria-hidden="true"></span><span class="home-today-card__text">${homeGuidancePunctuate(t)}</span></li>`,
+    )
+    .join("");
 }
 
 function renderHomeCycleTodayLines(iso, phase, w, info, rhythmTier) {
@@ -1471,58 +1483,617 @@ function renderHomeEmptyState(rhythmTier) {
   if (el) el.hidden = rhythmTier !== "cold";
 }
 
-function renderHomeHeroGlance(iso, w, rhythmTier) {
-  const wrap = $$("#homeHeroGlance");
-  const textEl = $$("#homeHeroGlanceText");
-  if (!wrap || !textEl) return;
+const HOME_PHASE_ORDER = ["Period", "Follicular", "Ovulation", "Luteal"];
+
+function nextCyclePhaseName(phase) {
+  const i = HOME_PHASE_ORDER.indexOf(phase);
+  if (i < 0) return "Follicular";
+  return HOME_PHASE_ORDER[(i + 1) % HOME_PHASE_ORDER.length];
+}
+
+function phaseEndDayForProgress(cycleLen, periodDur, phase) {
+  const cl = clamp(Number(cycleLen) || 28, 15, 60);
+  const pd = clamp(Number(periodDur) || 5, 2, 10);
+  const ovDay = clamp(cl - 14 + 1, 1, cl);
+  const ovuStart = clamp(ovDay - 1, 1, cl);
+  const ovuEnd = clamp(ovDay + 1, 1, cl);
+  if (phase === "Period") return pd;
+  if (phase === "Follicular") return Math.max(pd + 1, ovuStart - 1);
+  if (phase === "Ovulation") return ovuEnd;
+  if (phase === "Luteal") return cl;
+  return cl;
+}
+
+function homeTodayFlowSubtext(phase, w, iso) {
+  if (phase === "Period") {
+    const f = w.flowFeel || "Light";
+    if (f === "Heavy") return "🩸 Heavier flow";
+    if (f === "Medium") return "🩸 Medium flow";
+    if (f === "Spotting") return "🩸 Spotting";
+    return "🩸 Light flow";
+  }
+  if (phase === "Ovulation") return "Fertile window";
+  if (phase === "Follicular") return "Energy returning";
+  if (phase === "Luteal") return "Pre-period phase";
+  return "";
+}
+
+function homeTodayMeaningLine(phase, w, info, rhythmTier) {
+  if (rhythmTier === "cold") return "One log unlocks where you are today.";
+  if (rhythmTier === "learning") return "Keep logging — your rhythm is taking shape.";
+  if (!phase) return "Your body may prefer gentleness while we learn.";
+  if (w.symptoms?.includes("Cramps")) return "Your body may prefer slower movement today.";
+  if (w.energy === "Low") return "Rest may feel more supportive today.";
+  if (w.energy === "High" && (phase === "Ovulation" || phase === "Follicular")) {
+    return "Energy and focus may feel stronger today.";
+  }
+  if (phase === "Period") return "Your body may prefer slower movement today.";
+  if (phase === "Ovulation") return "Energy and focus may feel stronger today.";
+  if (phase === "Luteal") return "Rest and gentler routines may feel better.";
+  if (phase === "Follicular") return "Energy and focus may feel stronger today.";
+  return "Small steps still support your rhythm today.";
+}
+
+function buildHomeTodayExpectBullets(phase, w, info, rhythmTier) {
+  if (rhythmTier === "cold") return ["One gentle log unlocks your day", "No pressure to be perfect"];
+  if (rhythmTier === "learning") return ["Forecasts stay soft for now", "Small logs teach your rhythm"];
+  const bullets = [];
+  if (w.energy === "Low" || w.symptoms?.includes("Fatigue")) bullets.push("Mild fatigue possible");
+  if (phase === "Luteal" || w.symptoms?.includes("Bloating")) bullets.push("Cravings may increase");
+  if (w.energy === "Low") bullets.push("Energy usually lower");
+  else if (phase === "Ovulation" || phase === "Follicular") bullets.push("Energy may feel brighter");
+  if (phase === "Period" || w.symptoms?.includes("Cramps")) bullets.push("Gentle pacing helps");
+  bullets.push("Hydration helps");
+  if (phase === "Luteal") bullets.push("Earlier rest may help");
+  if (phase === "Ovulation") bullets.push("Recovery still matters");
+  return [...new Set(bullets)].slice(0, 4);
+}
+
+function buildHomeBodySignals(iso, phase, w) {
+  const tc = state.data?.checkins?.[iso] || {};
+  const signals = [];
+  const flow = tc.flow || tc.flowFeel || w.flowFeel;
+  if (flow && dayHasPeriod(iso)) {
+    const f = String(flow).toLowerCase();
+    const lab =
+      f === "heavy" ? "Heavier flow" : f === "medium" ? "Medium flow" : f === "spotting" ? "Spotting" : "Light flow";
+    signals.push({ emoji: "🩸", text: lab });
+  }
+  const e = w.energy || tc.energy;
+  if (e === "Low") signals.push({ emoji: "🌙", text: "Lower energy" });
+  else if (e === "High") signals.push({ emoji: "✨", text: "Higher energy" });
+  const sy = Array.isArray(tc.symptoms) ? tc.symptoms.filter(Boolean) : w.symptoms || [];
+  if (sy.includes("Bloating")) signals.push({ emoji: "💧", text: "Slight bloating" });
+  if (sy.includes("Cramps")) signals.push({ emoji: "⚡", text: "Mild cramps" });
+  else if (sy.length) signals.push({ emoji: "⚡", text: sy[0] });
+  if (tc.pain === "Medium") signals.push({ emoji: "⚡", text: "Mild cramps" });
+  if (tc.pain === "High") signals.push({ emoji: "⚡", text: "Stronger cramps" });
+  if (!signals.length && phase === "Period") signals.push({ emoji: "🩸", text: "Bleeding phase" });
+  if (!signals.length && phase === "Luteal") signals.push({ emoji: "🌙", text: "Pre-period window" });
+  return signals.slice(0, 5);
+}
+
+function buildHomeWhatHelps(phase, w) {
+  const items = [];
+  if (phase === "Period" || w.symptoms?.includes("Cramps")) {
+    items.push({ emoji: "☕", text: "Warm drinks" }, { emoji: "🛌", text: "Extra rest" });
+  }
+  if (w.energy !== "High") items.push({ emoji: "🚶", text: "Light walk" });
+  items.push({ emoji: "💧", text: "More water" });
+  if (phase === "Luteal") items.push({ emoji: "🍫", text: "Steady snacks" });
+  if (phase === "Ovulation") items.push({ emoji: "🥗", text: "Balanced meals" });
+  return [...new Map(items.map((x) => [x.text, x])).values()].slice(0, 4);
+}
+
+function homeCycleConfidenceScore(iso) {
+  const periods = state.data?.periods || [];
+  const n = periods.length;
+  if (n === 0) return { pct: 18, note: "Learning from your logs." };
+  if (homePredictionIsLearning(iso) || homeRhythmTier(iso) === "learning") {
+    return { pct: clamp(28 + n * 10 + homeRecentLogStreak(iso) * 2, 32, 58), note: "Learning from your logs." };
+  }
+  let pct = 72;
+  if (averageCycleLength(periods)) pct += 6;
+  if (n >= 3) pct += 6;
+  if (homeRecentLogStreak(iso) >= 5) pct += 8;
+  return { pct: clamp(pct, 62, 92), note: "Based on your rhythm." };
+}
+
+function buildHomeTodayInsight(phase, w, info, rhythmTier) {
+  if (rhythmTier === "cold") {
+    return {
+      teaser: "Many people start with mood and flow.",
+      body: "One or two gentle logs help Ayla learn what feels normal for you — not a perfect streak.",
+    };
+  }
+  if (w.symptoms?.includes("Cramps")) {
+    return {
+      teaser: "Cramps are common in this stage.",
+      body: "Warmth, hydration, and slower movement often help. If pain feels unusual for you, trust your instincts and seek care.",
+    };
+  }
+  const byPhase = {
+    Period: {
+      teaser: "Lower energy is common here.",
+      body: "Many people experience softer bandwidth during bleeding days. Rest counts as care.",
+    },
+    Follicular: {
+      teaser: "Energy often builds in this phase.",
+      body: "Focus and movement may feel easier — still hydrate and land softly after busy days.",
+    },
+    Ovulation: {
+      teaser: "A brighter window for many.",
+      body: "Energy and outward focus may peak. Balance bright days with recovery later.",
+    },
+    Luteal: {
+      teaser: "Softer bandwidth is common now.",
+      body: "Cravings, sleep shifts, and mood changes are normal for many people in this stage.",
+    },
+  };
+  const pack = byPhase[phase] || {
+    teaser: "Your body shifts through the cycle.",
+    body: "Small daily logs help Ayla reflect your rhythm back with honesty.",
+  };
+  if (w.energy === "Low") {
+    pack.teaser = "Lower energy around this stage.";
+    pack.body = "Many people feel a slower rhythm here. Gentler plans still count.";
+  }
+  return pack;
+}
+
+const HOME_WATER_DAILY_GOAL = 8;
+
+/** One-time daily essentials — water is excluded (updates all day). */
+function homeEssentialProgressSteps(iso, phase, rhythmTier) {
+  if (rhythmTier === "cold" || rhythmTier === "learning") {
+    return [{ key: "mood", label: "Mood" }];
+  }
+  const steps = [{ key: "mood", label: "Mood" }];
+  if (dayHasPeriod(iso)) {
+    steps.push({ key: "flow", label: "Flow" });
+  }
+  steps.push({ key: "symptoms", label: "Symptoms" });
+  return steps;
+}
+
+function homeTodayProgressSteps(iso, phase, rhythmTier) {
+  return homeEssentialProgressSteps(iso, phase, rhythmTier);
+}
+
+function homeProgressStepDone(key, flags) {
+  if (key === "mood") return flags.hasMood;
+  if (key === "flow") return flags.hasFlow;
+  if (key === "symptoms") return flags.hasSymptoms;
+  return false;
+}
+
+function homeFlowSnapshot(iso, w) {
+  const tc = state.data?.checkins?.[iso] || {};
+  const flow = tc.flow || tc.flowFeel || w.flowFeel;
+  if (!dayHasPeriod(iso)) return "—";
+  if (!flow) return "Medium";
+  const f = String(flow).toLowerCase();
+  if (f === "heavy") return "Heavy";
+  if (f === "medium") return "Medium";
+  if (f === "spotting") return "Spotting";
+  return "Light";
+}
+
+/** Right panel only — raw health metrics, no phase/day/guidance copy. */
+function homeSnapshotDisplayValue(key, iso, w, phase) {
+  const tc = state.data?.checkins?.[iso] || {};
+  if (key === "mood") {
+    const m = w.mood || tc.mood;
+    return m && m !== "Unknown" ? moodSnapshotFriendly(m) : "—";
+  }
+  if (key === "energy") {
+    const e = w.energy || tc.energy;
+    return e && e !== "Unknown" ? energySnapshotLabel(e) : "Balanced";
+  }
+  if (key === "sleep") {
+    const c = state.data?.checkins?.[iso];
+    if (c && typeof c.sleepMinutes === "number") {
+      const s = homeSleepSnapshot(iso, phase, w);
+      return s === "Tap to update" ? buildHomeGlanceSleep(phase, w) : s;
+    }
+    return buildHomeGlanceSleep(phase, w);
+  }
+  if (key === "water") {
+    const v = homeWaterVal(iso);
+    return v === "—" ? "0 Glasses" : v;
+  }
+  if (key === "flow") return homeFlowSnapshot(iso, w);
+  if (key === "symptoms") {
+    const sy = Array.isArray(tc.symptoms) ? tc.symptoms.filter(Boolean) : w.symptoms || [];
+    if (!sy.length && tc.symptomsNone) return "None";
+    if (!sy.length) return "None yet";
+    if (sy.length === 1) return sy[0];
+    return `${sy[0]} +${sy.length - 1}`;
+  }
+  return "—";
+}
+
+function renderHomeRightSnapshot(iso, w, phase) {
+  const map = {
+    mood: $$("#homeSnapMoodVal"),
+    sleep: $$("#homeSnapSleepVal"),
+    energy: $$("#homeSnapEnergyVal"),
+    water: $$("#homeSnapWaterVal"),
+    flow: $$("#homeSnapFlowVal"),
+    symptoms: $$("#homeSnapSymptomsVal"),
+  };
+  Object.entries(map).forEach(([k, el]) => {
+    if (el) el.textContent = homeSnapshotDisplayValue(k, iso, w, phase);
+  });
+}
+
+function homeQuickLogIsDone(q, flags, iso) {
+  if (q === "mood") return flags.hasMood;
+  if (q === "flow") return flags.hasFlow;
+  if (q === "symptoms" || q === "cravings") return flags.hasSymptoms;
+  if (q === "cramps") {
+    const tc = state.data?.checkins?.[iso] || {};
+    const sy = Array.isArray(tc.symptoms) ? tc.symptoms.filter(Boolean) : [];
+    return sy.includes("Cramps") || Boolean(tc.symptomsNone);
+  }
+  if (q === "water") return flags.hasWater;
+  if (q === "sleep") return flags.hasSleep;
+  if (q === "energy") return flags.hasEnergy;
+  if (q === "period") return dayHasPeriod(iso);
+  if (q === "notes") return flags.hasNotes;
+  return false;
+}
+
+function renderHomeTodayExpect(iso, phase, w, info, rhythmTier) {
+  const wrap = $$("#homeTodayExpect");
+  const list = $$("#homeTodayExpectList");
+  if (!wrap || !list) return;
   if (rhythmTier === "cold") {
     wrap.hidden = true;
-    textEl.textContent = "";
+    return;
+  }
+  const bullets = buildHomeTodayExpectBullets(phase, w, info, rhythmTier);
+  wrap.hidden = false;
+  list.innerHTML = bullets.map((t) => `<li>${t}</li>`).join("");
+}
+
+function renderHomeTodayProgress(iso, phase, w, rhythmTier) {
+  const wrap = $$("#homeTodayProgress");
+  const stepsEl = $$("#homeTodayProgressSteps");
+  const ringFill = $$("#homeTodayProgressRingFill");
+  const pctEl = $$("#homeTodayProgressPct");
+  if (!wrap || !stepsEl) return;
+  if (rhythmTier === "cold") {
+    wrap.hidden = true;
+    return;
+  }
+  const flags = homeTodayCheckinFlags(iso, w);
+  const steps = homeTodayProgressSteps(iso, phase, rhythmTier);
+  const doneN = steps.filter((s) => homeProgressStepDone(s.key, flags)).length;
+  const pct = steps.length ? Math.round((doneN / steps.length) * 100) : 0;
+  wrap.hidden = false;
+  stepsEl.innerHTML = steps
+    .map((s) => {
+      const on = homeProgressStepDone(s.key, flags);
+      return `<li class="home-today-progress__step${on ? " is-done" : ""}"><span class="home-today-progress__mark" aria-hidden="true">${on ? "✓" : "○"}</span>${s.label}</li>`;
+    })
+    .join("");
+  if (pctEl) pctEl.textContent = `${pct}%`;
+  if (ringFill) {
+    const circ = 2 * Math.PI * 15.5;
+    ringFill.style.strokeDasharray = `${circ}`;
+    ringFill.style.strokeDashoffset = `${circ * (1 - pct / 100)}`;
+  }
+}
+
+function renderHomeBodySignals(iso, phase, w, rhythmTier) {
+  const wrap = $$("#homeBodySignals");
+  const row = $$("#homeBodySignalsChips");
+  if (!wrap || !row) return;
+  if (rhythmTier === "cold") {
+    wrap.hidden = true;
+    return;
+  }
+  const signals = buildHomeBodySignals(iso, phase, w);
+  if (!signals.length) {
+    wrap.hidden = true;
     return;
   }
   wrap.hidden = false;
-  const tc = state.data?.checkins?.[iso] || {};
-  const mood = w.mood || tc.mood;
-  const hasMood = Boolean(mood);
-  const hasFlow = Boolean(tc.flow) || dayHasPeriod(iso);
-  const sy = Array.isArray(tc.symptoms) ? tc.symptoms.filter(Boolean) : [];
-  if (rhythmTier === "learning") {
-    textEl.textContent = "Keep logging — Ayla is learning your rhythm.";
-    return;
-  }
-  if (hasMood && sy.length) {
-    textEl.textContent = `Logged today · ${moodSnapshotFriendly(mood)} · ${sy[0]}${sy.length > 1 ? ` +${sy.length - 1}` : ""}`;
-    return;
-  }
-  if (hasMood) {
-    textEl.textContent = `Logged today · Mood: ${moodSnapshotFriendly(mood)}`;
-    return;
-  }
-  if (hasFlow && dayHasPeriod(iso)) {
-    textEl.textContent = "Period logged · Add how you feel when you're ready.";
-    return;
-  }
-  textEl.textContent = "Not logged yet today — your next step is below.";
+  row.innerHTML = signals
+    .map(
+      ({ emoji, text }) =>
+        `<span class="home-body-signal-chip"><span aria-hidden="true">${emoji}</span> ${text}</span>`,
+    )
+    .join("");
 }
 
-function renderHomeCycleMeta(iso, phase, w, info, rhythmTier, cyc) {
-  const metaEl = $$("#homeCycleMeta");
-  if (!metaEl) return;
-  if (rhythmTier === "cold" || rhythmTier === "learning") {
-    metaEl.hidden = true;
-    metaEl.textContent = "";
+function renderHomeWhatHelps(phase, w, rhythmTier) {
+  const wrap = $$("#homeWhatHelps");
+  const grid = $$("#homeWhatHelpsGrid");
+  if (!wrap || !grid) return;
+  if (rhythmTier === "cold") {
+    wrap.hidden = true;
     return;
   }
-  if (phase === "Period" && info?.day) {
-    const flowLine = flowFeelLine(w);
-    if (flowLine) {
-      metaEl.textContent = flowLine;
-      metaEl.hidden = false;
-      return;
+  const items = buildHomeWhatHelps(phase, w);
+  wrap.hidden = false;
+  grid.innerHTML = items
+    .map(({ emoji, text }) => `<span class="home-what-helps__card"><span aria-hidden="true">${emoji}</span> ${text}</span>`)
+    .join("");
+}
+
+function renderHomeCycleConfidence(iso, rhythmTier) {
+  const wrap = $$("#homeCycleConfidence");
+  const line = $$("#homeCycleConfidenceLine");
+  const note = $$("#homeCycleConfidenceNote");
+  if (!wrap || !line) return;
+  if (rhythmTier === "cold") {
+    wrap.hidden = true;
+    return;
+  }
+  const { pct, note: noteTxt } = homeCycleConfidenceScore(iso);
+  wrap.hidden = false;
+  line.textContent = `Cycle confidence: ${pct}%`;
+  if (note) note.textContent = noteTxt;
+}
+
+function renderHomeTodayInsight(iso, phase, w, info, rhythmTier) {
+  const el = $$("#homeTodayInsight");
+  const teaser = $$("#homeTodayInsightTeaser");
+  const body = $$("#homeTodayInsightBody");
+  if (!el || !teaser || !body) return;
+  if (rhythmTier === "cold") {
+    el.hidden = true;
+    return;
+  }
+  const pack = buildHomeTodayInsight(phase, w, info, rhythmTier);
+  el.hidden = false;
+  teaser.textContent = pack.teaser;
+  body.textContent = pack.body;
+}
+
+function renderHomeHeroState(iso, phase, w, info, rhythmTier, cyc) {
+  const stateEl = $$("#homeCycleStateLine");
+  const meaningEl = $$("#homeCycleMeaningLine");
+  if (meaningEl) {
+    meaningEl.textContent = "";
+    meaningEl.hidden = true;
+  }
+  if (!stateEl) return;
+  if (rhythmTier === "cold") {
+    stateEl.textContent = "";
+    return;
+  }
+  if (rhythmTier === "learning") {
+    stateEl.textContent = homeTodayFlowSubtext(phase, w, iso) || "Rhythm taking shape";
+    return;
+  }
+  stateEl.textContent = homeTodayFlowSubtext(phase, w, iso);
+}
+
+function homeTodayCheckinFlags(iso, w) {
+  const tc = state.data?.checkins?.[iso] || {};
+  const mood = w.mood || tc.mood;
+  const sy = Array.isArray(tc.symptoms) ? tc.symptoms.filter(Boolean) : w.symptoms || [];
+  const water = Number(tc.waterGlasses);
+  return {
+    hasMood: Boolean(mood && mood !== "Unknown"),
+    hasFlow: Boolean(tc.flow || tc.flowFeel) || dayHasPeriod(iso),
+    hasSymptoms: sy.length > 0 || Boolean(tc.symptomsNone),
+    hasWater: Number.isFinite(water) && water > 0,
+    hasPain: Boolean(tc.pain && tc.pain !== "None"),
+    hasSleep: typeof tc.sleepMinutes === "number",
+    hasEnergy: Boolean((w.energy || tc.energy) && (w.energy || tc.energy) !== "Unknown"),
+    hasNotes: Boolean(tc.notes && String(tc.notes).trim()),
+  };
+}
+
+function homeEssentialActionPipeline(iso, phase, rhythmTier) {
+  if (rhythmTier === "cold" || rhythmTier === "learning") {
+    return [{ label: "Log mood", cta: "mood", isDone: (f) => f.hasMood }];
+  }
+  const steps = [{ label: "Log mood", cta: "mood", isDone: (f) => f.hasMood }];
+  if (dayHasPeriod(iso)) {
+    steps.push({ label: "Log flow", cta: "flow", isDone: (f) => f.hasFlow });
+  }
+  steps.push({ label: "Log symptoms", cta: "symptoms", isDone: (f) => f.hasSymptoms });
+  return steps;
+}
+
+function homeHeroNextAction(iso, phase, w, rhythmTier) {
+  const flags = homeTodayCheckinFlags(iso, w);
+  const pipeline = homeEssentialActionPipeline(iso, phase, rhythmTier);
+  for (const step of pipeline) {
+    if (!step.isDone(flags)) {
+      return { label: step.label, cta: step.cta, allEssentialsDone: false };
     }
   }
-  metaEl.hidden = true;
-  metaEl.textContent = "";
+  return { label: "Today's essentials completed", cta: "", allEssentialsDone: true };
+}
+
+function applyHomeNextAction(iso, phase, w, rhythmTier) {
+  const doneEl = $$("#homeHeroCtaDone");
+  const completeBadge = $$("#homeHeroCompleteBadge");
+  const actionsLabel = $$("#homeHeroActionsLabel");
+  const ctaRow = $$("#homeHeroCtaRow");
+
+  if (doneEl) {
+    doneEl.hidden = true;
+    doneEl.textContent = "";
+  }
+
+  const action = homeHeroNextAction(iso, phase, w, rhythmTier);
+
+  if (action.allEssentialsDone) {
+    if (homeHeroPrimaryBtn) {
+      homeHeroPrimaryBtn.hidden = true;
+      homeHeroPrimaryBtn.setAttribute("aria-hidden", "true");
+      homeHeroPrimaryBtn.disabled = true;
+      homeHeroPrimaryBtn.classList.remove("is-complete");
+    }
+    if (ctaRow) ctaRow.hidden = true;
+    if (actionsLabel) actionsLabel.hidden = false;
+    if (completeBadge) completeBadge.hidden = false;
+  } else {
+    if (completeBadge) completeBadge.hidden = true;
+    if (actionsLabel) actionsLabel.hidden = false;
+    if (ctaRow) ctaRow.hidden = false;
+    if (homeHeroPrimaryBtn) {
+      homeHeroPrimaryBtn.hidden = false;
+      homeHeroPrimaryBtn.removeAttribute("aria-hidden");
+      homeHeroPrimaryBtn.disabled = false;
+      homeHeroPrimaryBtn.textContent = "Update today's check-in";
+      homeHeroPrimaryBtn.dataset.homeHeroCta = action.cta;
+      homeHeroPrimaryBtn.classList.remove("is-complete");
+    }
+  }
+
+  if (homeHeroSecondaryBtn) {
+    homeHeroSecondaryBtn.hidden = true;
+    homeHeroSecondaryBtn.setAttribute("aria-hidden", "true");
+  }
+}
+
+function renderHomeCycleVisualTrack(phase, rhythmTier) {
+  const el = $$("#homeCycleTrack");
+  if (!el) return;
+  if (rhythmTier === "cold" || !phase) {
+    el.hidden = true;
+    el.innerHTML = "";
+    return;
+  }
+  const phases = HOME_PHASE_ORDER;
+  const idx = phases.indexOf(phase);
+  const parts = [];
+  phases.forEach((p, i) => {
+    const slug = p.toLowerCase();
+    let nodeCls = "home-cycle-track__node is-future";
+    if (i < idx) nodeCls = "home-cycle-track__node is-past";
+    else if (i === idx) nodeCls = "home-cycle-track__node is-current";
+    parts.push(`<span class="${nodeCls}" data-track-phase="${slug}"></span>`);
+    if (i < phases.length - 1) {
+      const segCls = i < idx ? "home-cycle-track__seg is-past" : "home-cycle-track__seg";
+      parts.push(`<span class="${segCls}" aria-hidden="true"></span>`);
+    }
+  });
+  el.hidden = false;
+  el.innerHTML = parts.join("");
+}
+
+function renderHomeTodayChangedChips(iso, w, rhythmTier) {
+  const el = $$("#homeChangedChips");
+  if (!el) return;
+  if (rhythmTier === "cold" || rhythmTier === "learning") {
+    el.hidden = true;
+    el.innerHTML = "";
+    return;
+  }
+  const items = buildHomeTodayChanged(iso, w);
+  if (!items.length) {
+    el.hidden = true;
+    el.innerHTML = "";
+    return;
+  }
+  el.hidden = false;
+  el.innerHTML = items
+    .slice(0, 3)
+    .map((t) => `<span class="home-changed-chip">${t}</span>`)
+    .join("");
+}
+
+function renderHomeCycleNextPhaseLine(info, phase, iso, periods, prefs, rhythmTier) {
+  const el = $$("#homeCycleNextPhase");
+  if (!el) return;
+  if (rhythmTier === "cold" || !info?.day || !phase || !info.cycleLen) {
+    el.hidden = true;
+    el.textContent = "";
+    return;
+  }
+  const cyc = cycleForISO(periods, prefs, iso);
+  const pd = cyc?.periodDur ?? info.periodDur ?? 5;
+  const endDay = phaseEndDayForProgress(info.cycleLen, pd, phase);
+  const daysLeft = endDay - info.day;
+  const next = nextCyclePhaseName(phase);
+  if (daysLeft <= 0) el.textContent = `Next: ${next} soon`;
+  else if (daysLeft === 1) el.textContent = `Next: ${next} tomorrow`;
+  else el.textContent = `Next: ${next} in ${daysLeft} days`;
+  el.hidden = false;
+}
+
+function buildHomeUpcomingCards(iso, info, phase, periods, prefs, cyc) {
+  const cards = [];
+  if (cyc?.ovulationISO) {
+    const dOv = daysBetweenISO(iso, cyc.ovulationISO);
+    if (dOv > 0) cards.push({ emoji: "✨", text: `Ovulation in ${dOv} day${dOv === 1 ? "" : "s"}` });
+    else if (dOv === 0) cards.push({ emoji: "✨", text: "Ovulation today" });
+  }
+  let nextP = predictNextPeriodStart(periods);
+  if (!nextP && info?.startISO && info?.cycleLen) nextP = predictNextFromCycleStart(info.startISO, info.cycleLen);
+  if (nextP) {
+    const d = daysBetweenISO(iso, nextP);
+    if (d >= 0) cards.push({ emoji: "🩸", text: `Next period ${formatMonthDay(nextP)}` });
+    if (phase === "Luteal" && d > 0 && d <= 12) {
+      const pmsIn = Math.max(1, d - 5);
+      if (pmsIn > 0 && pmsIn <= 10) {
+        cards.push({ emoji: "🌙", text: `PMS expected in ${pmsIn} day${pmsIn === 1 ? "" : "s"}` });
+      }
+    }
+  }
+  return cards.slice(0, 3);
+}
+
+function renderHomeUpcoming(iso, info, phase, periods, prefs, cyc, rhythmTier) {
+  const wrap = $$("#homeHeroUpcoming");
+  const list = $$("#homeUpcomingList");
+  if (!wrap || !list) return;
+  wrap.hidden = true;
+  list.innerHTML = "";
+}
+
+function homeRecentLogStreak(iso) {
+  let streak = 0;
+  for (let i = 0; i < 14; i++) {
+    const d = addDaysISO(iso, -i);
+    const c = state.data?.checkins?.[d];
+    const has =
+      c &&
+      (c.mood ||
+        c.energy ||
+        c.flow ||
+        c.flowFeel ||
+        (Array.isArray(c.symptoms) && c.symptoms.length) ||
+        typeof c.waterGlasses === "number" ||
+        typeof c.sleepMinutes === "number" ||
+        (c.pain && c.pain !== "None"));
+    if (has) streak++;
+    else if (i > 0) break;
+    else break;
+  }
+  return streak;
+}
+
+function renderHomeMicroNudge(iso, rhythmTier, info) {
+  const el = $$("#homeMicroNudge");
+  if (!el) return;
+  if (rhythmTier === "cold") {
+    el.textContent = "Still understanding your cycle.";
+    el.hidden = false;
+    return;
+  }
+  if (rhythmTier === "learning") {
+    el.textContent = "We're learning your rhythm.";
+    el.hidden = false;
+    return;
+  }
+  const day = info?.day || 0;
+  const streak = homeRecentLogStreak(iso);
+  if (streak >= 5) el.textContent = `You logged ${streak} days in a row.`;
+  else if (streak >= 3) el.textContent = "You're showing up consistently.";
+  else if (day >= 20) el.textContent = "We understand your rhythm better this week.";
+  else if (rhythmTier === "learning" || day === 2) el.textContent = "Learning your cycle.";
+  else el.textContent = pickHomeLine(iso, "micro-nudge", ["Small logs build clarity."]);
+  el.hidden = false;
 }
 
 function renderHomeOrbReadout(iso, phase, w, info, rhythmTier, cyc) {
@@ -1576,6 +2147,10 @@ const HOME_PANEL_ICON_KEYS = {
   symptoms: "home_heart_pulse",
   movement: "home_activity",
   flow: "home_droplet",
+  pain: "home_heart_pulse",
+  cramps: "home_heart_pulse",
+  cravings: "home_notes",
+  libido: "home_heart_pulse",
   more: "home_plus",
   notes: "home_notes",
   period: "cal_period",
@@ -1603,6 +2178,12 @@ const HOME_QUICK_LOG_LABELS = {
   symptoms: "Symptoms",
   movement: "Movement",
   flow: "Flow",
+  pain: "Pain",
+  cramps: "Cramps",
+  cravings: "Cravings",
+  libido: "Libido",
+  energy: "Energy",
+  sleep: "Sleep",
   more: "More",
   period: "Period",
   notes: "Notes",
@@ -1615,34 +2196,54 @@ const HOME_PHASE_ICON_KEYS = {
   luteal: "phase_luteal",
 };
 
-function renderAdaptiveHomeQuickLog(iso, phase, rhythmTier) {
+function renderAdaptiveHomeQuickLog(iso, phase, rhythmTier, w) {
+  const completedBlock = $$("#homeQuicklogCompletedBlock");
+  const completedList = $$("#homeQuicklogCompletedList");
+  const updatingList = $$("#homeQuicklogUpdatingList");
+  const stillLabel = $$("#homeQuicklogStillLabel");
+  const empty = $$("#homeQuicklogEmpty");
   const row = $$("#homeQuickLogRow");
-  if (!row) return;
-  const picks = [];
-  const add = (q) => picks.push({ q, lab: HOME_QUICK_LOG_LABELS[q] || q });
+  if (!updatingList) return;
 
-  if (rhythmTier === "cold" || rhythmTier === "learning") {
-    add("period");
-    add("mood");
-    add("symptoms");
-    add("water");
-    add("notes");
-    add("more");
-  } else {
-    add("mood");
-    add("water");
-    add("symptoms");
-    add("movement");
-    add("flow");
-    add("more");
+  const flags = homeTodayCheckinFlags(iso, w || readTodayWellnessModel());
+  const essentialSteps = homeEssentialProgressSteps(iso, phase, rhythmTier);
+  const doneItems = essentialSteps.filter((s) => homeProgressStepDone(s.key, flags));
+
+  if (completedBlock) completedBlock.hidden = doneItems.length === 0;
+  if (completedList) {
+    completedList.innerHTML = doneItems
+      .map(
+        (s) =>
+          `<li class="home-quicklog__completed-item"><span class="home-quicklog__completed-mark" aria-hidden="true">✓</span><span>${s.label}</span></li>`,
+      )
+      .join("");
   }
 
-  row.innerHTML = picks
+  const waterN = getTodayWaterGlassCount();
+  const waterUnit = waterN === 1 ? "Glass" : "Glasses";
+  const symSnap = homeSymptomsSnapshot(iso);
+  const symMeta =
+    symSnap === "—" || symSnap === "None yet" || symSnap === "Tap to log" ? "Can update" : symSnap;
+
+  const updating = [
+    { q: "water", label: "Water", meta: `${waterN}/${HOME_WATER_DAILY_GOAL} ${waterUnit}` },
+    { q: "notes", label: "Notes", meta: flags.hasNotes ? "Saved" : "Optional" },
+    { q: "symptoms", label: "Symptoms", meta: symMeta },
+  ];
+
+  updatingList.innerHTML = updating
     .map(
-      ({ q, lab }) =>
-        `<button type="button" class="home-quicklog__action" data-home-quick="${q}" data-home-quick-action="${q}"><span class="home-icon-wrap home-icon-wrap--${q}">${homePanelIconHtml(q)}</span><span class="home-quicklog__action-label">${lab}</span></button>`,
+      ({ q, label, meta }) =>
+        `<button type="button" class="home-quicklog__updating-item" data-home-quick="${q}" role="listitem">
+          <span class="home-quicklog__updating-label">${label}</span>
+          <span class="home-quicklog__updating-meta">${meta}</span>
+        </button>`,
     )
     .join("");
+
+  if (stillLabel) stillLabel.hidden = true;
+  if (empty) empty.hidden = true;
+  if (row) row.innerHTML = "";
 }
 
 function pulseHomeQuickChip(btn, action) {
@@ -1672,88 +2273,6 @@ function renderHomeQuicklogPrimaryCta(iso, w, rhythmTier) {
   }
 }
 
-function applySteadyHomeHeroCtas(iso, phase, w, info) {
-  if (!homeHeroPrimaryBtn || !homeHeroSecondaryBtn) return;
-  const hasLogs = homeUserHasPeriodLogs();
-  const support = $$("#homeHeroCtaSupport");
-  const setSupport = (t) => {
-    if (!support) return;
-    const s = (t || "").trim();
-    if (!s) {
-      support.hidden = true;
-      support.textContent = "";
-    } else {
-      support.hidden = false;
-      support.textContent = s;
-    }
-  };
-
-  if (dayHasPeriod(iso) && phase === "Period") {
-    homeHeroPrimaryBtn.textContent = "How are you feeling?";
-    homeHeroPrimaryBtn.dataset.homeHeroCta = "mood";
-    setSupport("");
-    homeHeroSecondaryBtn.hidden = false;
-    homeHeroSecondaryBtn.textContent = "Add note";
-    homeHeroSecondaryBtn.dataset.homeHeroCta = "notes";
-    return;
-  }
-  if (phase === "Ovulation") {
-    homeHeroPrimaryBtn.textContent = "Capture energy";
-    homeHeroPrimaryBtn.dataset.homeHeroCta = "energy";
-    setSupport(homeHeroPrimarySupportCopy("Ovulation"));
-    homeHeroSecondaryBtn.hidden = false;
-    homeHeroSecondaryBtn.textContent = "Daily check-in";
-    homeHeroSecondaryBtn.dataset.homeHeroCta = "checkin";
-    return;
-  }
-  if (phase === "Luteal") {
-    homeHeroPrimaryBtn.textContent = "Mood check";
-    homeHeroPrimaryBtn.dataset.homeHeroCta = "mood";
-    setSupport(homeHeroPrimarySupportCopy("Luteal"));
-    homeHeroSecondaryBtn.hidden = false;
-    homeHeroSecondaryBtn.textContent = "Add note";
-    homeHeroSecondaryBtn.dataset.homeHeroCta = "notes";
-    return;
-  }
-  if (phase === "Follicular") {
-    homeHeroPrimaryBtn.textContent = "Energy check";
-    homeHeroPrimaryBtn.dataset.homeHeroCta = "energy";
-    setSupport(homeHeroPrimarySupportCopy("Follicular"));
-    homeHeroSecondaryBtn.hidden = false;
-    homeHeroSecondaryBtn.textContent = "Add note";
-    homeHeroSecondaryBtn.dataset.homeHeroCta = "notes";
-    return;
-  }
-
-  const tc = state.data?.checkins?.[iso] || {};
-  const hasMoodLog = Boolean(tc.mood);
-  setSupport("");
-  if (!hasMoodLog) {
-    homeHeroPrimaryBtn.textContent = "Daily check-in";
-    homeHeroPrimaryBtn.dataset.homeHeroCta = "checkin";
-    if (hasLogs) {
-      homeHeroSecondaryBtn.hidden = false;
-      homeHeroSecondaryBtn.textContent = "Add note";
-      homeHeroSecondaryBtn.dataset.homeHeroCta = "notes";
-    } else {
-      homeHeroSecondaryBtn.hidden = false;
-      homeHeroSecondaryBtn.textContent = "Log period";
-      homeHeroSecondaryBtn.dataset.homeHeroCta = "adaptive";
-    }
-    return;
-  }
-  homeHeroPrimaryBtn.textContent = "Log today";
-  homeHeroPrimaryBtn.dataset.homeHeroCta = "adaptive";
-  if (hasLogs) {
-    homeHeroSecondaryBtn.hidden = false;
-    homeHeroSecondaryBtn.textContent = "Add note";
-    homeHeroSecondaryBtn.dataset.homeHeroCta = "notes";
-  } else {
-    homeHeroSecondaryBtn.hidden = false;
-    homeHeroSecondaryBtn.textContent = "Log period";
-    homeHeroSecondaryBtn.dataset.homeHeroCta = "adaptive";
-  }
-}
 
 /** Glance strip for the desktop left rail (phase + mood + energy; mirrors hero title when known). */
 function homeLeftStatusLine(info, phase, w, tier) {
@@ -1781,7 +2300,6 @@ function renderHomeSurface() {
   state.homeRhythmTier = rhythmTier;
   if (homeRoot) homeRoot.dataset.rhythmTier = rhythmTier;
 
-  const homeHeroCtaSupport = $$("#homeHeroCtaSupport");
   const homeCycleProgHeadEl = $$("#homeCycleProgHead");
   const homeCycleConfLine = $$("#homeCycleConfLine");
   const homeCyclePhaseStripEl = $$("#homeCyclePhaseStrip");
@@ -1792,51 +2310,46 @@ function renderHomeSurface() {
   if (homeMFWhisper) homeMFWhisper.textContent = "";
 
   const notifyDots = [homeNotifyDot, $$("#topbarNotifyDot")].filter(Boolean);
-  const showNotify = localStorage.getItem("ayla_notify_demo") !== "0";
+  const profilePrefs = ensureUserProfile(state.data);
+  const showNotify =
+    profilePrefs.notificationsEnabled !== false && localStorage.getItem("ayla_notify_demo") !== "0";
   notifyDots.forEach((dot) => {
     dot.hidden = !showNotify;
   });
 
   if (rhythmTier === "cold") {
-    if (homeCycleKicker) homeCycleKicker.textContent = "Current cycle";
+    if (homeCycleKicker) homeCycleKicker.textContent = "Today";
     if (homeCyclePrimary) homeCyclePrimary.textContent = "Your rhythm";
     if (homeCycleSecondary) homeCycleSecondary.textContent = "You do not need perfect memory to begin.";
     if (homeCycleMetrics) homeCycleMetrics.hidden = true;
-    if (homeHeroCtaRow) homeHeroCtaRow.hidden = true;
-    if (homeHeroCtaSupport) {
-      homeHeroCtaSupport.hidden = true;
-      homeHeroCtaSupport.textContent = "";
+    if (homeHeroCtaRow) {
+      homeHeroCtaRow.hidden = false;
+      applyHomeNextAction(iso, phase, w, rhythmTier);
     }
   } else if (rhythmTier === "learning") {
-    if (homeCycleKicker) homeCycleKicker.textContent = "Rhythm";
-    if (homeCyclePrimary) homeCyclePrimary.textContent = "We're rebuilding your rhythm.";
+    if (homeCycleCard && phase) homeCycleCard.dataset.phase = String(phase).toLowerCase();
+    if (homeCycleKicker) homeCycleKicker.textContent = "Today";
+    if (homeCyclePrimary) homeCyclePrimary.textContent = info?.day && phase ? homeCycleHeroTitle(info, phase) : "We're learning your rhythm";
     if (homeCycleSecondary) homeCycleSecondary.textContent = "We'll learn gently over time.";
     if (homeCycleMetrics) homeCycleMetrics.hidden = false;
     if (homeHeroCtaRow) {
       homeHeroCtaRow.hidden = false;
-      if (homeHeroPrimaryBtn) {
-        homeHeroPrimaryBtn.textContent = "Continue tracking";
-        homeHeroPrimaryBtn.dataset.homeHeroCta = "adaptive";
-      }
-      if (homeHeroSecondaryBtn) {
-        homeHeroSecondaryBtn.hidden = true;
-      }
-    }
-    if (homeHeroCtaSupport) {
-      homeHeroCtaSupport.hidden = true;
-      homeHeroCtaSupport.textContent = "";
+      applyHomeNextAction(iso, phase, w, rhythmTier);
     }
   } else {
     if (homeCycleCard && phase) homeCycleCard.dataset.phase = String(phase).toLowerCase();
     if (homeCycleKicker) homeCycleKicker.textContent = "Today";
     if (homeCyclePrimary) homeCyclePrimary.textContent = homeCycleHeroTitle(info, phase);
-    if (homeCycleSecondary) homeCycleSecondary.textContent = homeCycleHeroSub(phase, w, info, iso);
+    if (homeCycleSecondary) homeCycleSecondary.textContent = "";
     if (homeCycleMetrics) homeCycleMetrics.hidden = false;
     if (homeHeroCtaRow) {
       homeHeroCtaRow.hidden = false;
-      applySteadyHomeHeroCtas(iso, phase, w, info);
+      applyHomeNextAction(iso, phase, w, rhythmTier);
     }
   }
+
+  renderHomeHeroState(iso, phase, w, info, rhythmTier, cyc);
+  renderHomeTodayProgress(iso, phase, w, rhythmTier);
 
   const pct = rhythmTier === "cold" ? 0.08 : homeCycleProgressPct(info, iso);
   if (homeCycleBar) homeCycleBar.setAttribute("aria-valuenow", String(Math.round(pct * 100)));
@@ -1849,7 +2362,7 @@ function renderHomeSurface() {
     } else if (info?.day && (info.cycleLen || cyc?.cycleLen)) {
       const cl = Number(info.cycleLen || cyc?.cycleLen) || 28;
       const pct = Math.round(homeCycleProgressPct(info, iso) * 100);
-      homeCycleProgHeadEl.textContent = `Day ${info.day} of ~${cl} · ${pct}% through this cycle`;
+      homeCycleProgHeadEl.innerHTML = `Day ${info.day} of ~${cl}<br><span class="home-cycle-card__prog-pct">${pct}% complete</span>`;
       homeCycleProgHeadEl.hidden = false;
     } else {
       homeCycleProgHeadEl.textContent = phase ? `${phase} · gentle timing` : "Cycle · gentle read";
@@ -1861,54 +2374,19 @@ function renderHomeSurface() {
     homeCyclePhaseStripEl.hidden = rhythmTier === "cold" || !phase;
   }
   renderHomePhaseStrip(phase);
+  renderHomeCycleVisualTrack(phase, rhythmTier);
 
-  paintHomeTodayMetricIcons();
-  renderAdaptiveHomeQuickLog(iso, phase, rhythmTier);
-  const quickGuideLead = $$("#homeQuicklogGuideLead");
-  const quickGuideSub = $$("#homeQuicklogGuideSub");
-  if (quickGuideLead) {
-    quickGuideLead.textContent =
-      rhythmTier === "learning" ? "Keep logging gently" : "How are you feeling today?";
-  }
-  if (quickGuideSub) {
-    quickGuideSub.textContent =
-      rhythmTier === "learning"
-        ? "Small updates teach Ayla what feels normal for you."
-        : "Small updates help Ayla understand your rhythm.";
-  }
   renderHomeTodayCard(iso, phase, w, info, rhythmTier);
-  renderHomeCycleTodayLines(iso, phase, w, info, rhythmTier);
-  renderHomeCycleMeta(iso, phase, w, info, rhythmTier, cyc);
-  renderHomeHeroGlance(iso, w, rhythmTier);
+  renderHomeUpcoming(iso, info, phase, periods, prefs, cyc, rhythmTier);
+  renderHomeCycleNextPhaseLine(info, phase, iso, periods, prefs, rhythmTier);
   renderHomeOrbReadout(iso, phase, w, info, rhythmTier, cyc);
-  renderHomeHeroFuture(info, iso, periods, rhythmTier);
   renderHomeEmptyState(rhythmTier);
 
-  if (homeSnapMoodVal) homeSnapMoodVal.textContent = moodSnapshotFriendly(w.mood);
-  if (homeSnapEnergyVal) homeSnapEnergyVal.textContent = energySnapshotLabel(w.energy);
-  if (homeSnapWaterVal) homeSnapWaterVal.textContent = homeWaterVal(iso);
-  if (homeSnapSleepVal) homeSnapSleepVal.textContent = homeSleepSnapshot(iso, phase, w);
-  if (homeSnapSymptomsVal) homeSnapSymptomsVal.textContent = homeSymptomsSnapshot(iso);
-  renderHomeQuicklogPrimaryCta(iso, w, rhythmTier);
+  renderHomeRightSnapshot(iso, w, phase);
+  renderAdaptiveHomeQuickLog(iso, phase, rhythmTier, w);
 
-  const periodDay1Fresh = dayHasPeriod(iso) && phase === "Period" && info?.day === 1 && !state.data.checkins?.[iso];
-  if (periodDay1Fresh) {
-    if (homeSnapMoodVal) homeSnapMoodVal.textContent = "Tap to update";
-    if (homeSnapEnergyVal) homeSnapEnergyVal.textContent = "Unknown";
-    if (homeSnapSleepVal) homeSnapSleepVal.textContent = "Tap to update";
-  }
-
-  if (homeLeftStatus) homeLeftStatus.textContent = homeLeftStatusLine(info, phase, w, rhythmTier);
-  if (homeLeftGuide) {
-    homeLeftGuide.textContent =
-      rhythmTier === "cold"
-        ? "No pressure — tap Log current period whenever it feels right."
-        : rhythmTier === "learning"
-          ? "We'll understand your rhythm together — keep logging at your pace."
-          : `${homePredictMicroline(iso, info, w, cyc)}`
-              .replace(/\s+/g, " ")
-              .trim();
-  }
+  if (homeLeftStatus) homeLeftStatus.hidden = true;
+  if (homeLeftGuide) homeLeftGuide.hidden = true;
 
   const infoForOrb =
     rhythmTier === "cold" ? { day: null, cycleLen: null } : rhythmTier === "learning" ? { ...info, day: info.day || 5, cycleLen: info.cycleLen || 28 } : info;
@@ -3779,6 +4257,10 @@ const homeSnapMoodSheet = $$("#homeSnapMoodSheet");
 const homeSnapEnergySheet = $$("#homeSnapEnergySheet");
 const homeSnapSleepSheet = $$("#homeSnapSleepSheet");
 const homeWaterSheet = $$("#homeWaterSheet");
+const homeJournalSheet = $$("#homeJournalSheet");
+const homeJournalNoteInput = $$("#homeJournalNoteInput");
+const homeJournalDate = $$("#homeJournalDate");
+const homeJournalSaveBtn = $$("#homeJournalSaveBtn");
 const homeSymptomsSheet = $$("#homeSymptomsSheet");
 const homePeriodQuickSheet = $$("#homePeriodQuickSheet");
 const homePeriodAdaptiveSheet = $$("#homePeriodAdaptiveSheet");
@@ -3791,6 +4273,7 @@ const homeSheetSleepFeelRoot = $$("#homeSheetSleepFeelRoot");
 const homeSheetSymptomsRoot = $$("#homeSheetSymptomsRoot");
 const homeSheetSymptomSearch = $$("#homeSheetSymptomSearch");
 const homeSheetSymptomRecent = $$("#homeSheetSymptomRecent");
+const homeSheetSymptomNoneHint = $$("#homeSheetSymptomNoneHint");
 const homeSheetSymptomsSave = $$("#homeSheetSymptomsSave");
 const homeSheetPeriodFlowRoot = $$("#homeSheetPeriodFlowRoot");
 const homeSheetPeriodPainRoot = $$("#homeSheetPeriodPainRoot");
@@ -3818,6 +4301,8 @@ const logoutBtn = $$("#logoutBtn");
 const privacyModal = $$("#privacyModal");
 const footerPrivacyBtn = $$("#footerPrivacyBtn");
 const settingsModal = $$("#settingsModal");
+const profileModal = $$("#profileModal");
+const profileModalForm = $$("#profileModalForm");
 const settingsThemeBtn = $$("#settingsThemeBtn");
 
 const prevMonthBtn = $$("#prevMonthBtn");
@@ -3985,8 +4470,190 @@ function openModal(dlg) {
 }
 
 function closeModal(dlg) {
+  if (dlg === profileModal) setProfileModalScrollLock(false);
   if (typeof dlg.close === "function") dlg.close();
   else dlg.removeAttribute("open");
+}
+
+let profileModalScrollY = 0;
+
+function setProfileModalScrollLock(locked) {
+  const root = document.documentElement;
+  const body = document.body;
+  if (locked) {
+    profileModalScrollY = window.scrollY || window.pageYOffset || 0;
+    root.classList.add("is-profile-modal-open");
+    body.classList.add("is-profile-modal-open");
+    body.style.top = `-${profileModalScrollY}px`;
+  } else {
+    root.classList.remove("is-profile-modal-open");
+    body.classList.remove("is-profile-modal-open");
+    body.style.top = "";
+    window.scrollTo(0, profileModalScrollY);
+  }
+}
+
+function bindProfileModalScrollGuards() {
+  if (!profileModal || profileModal.dataset.scrollGuard === "1") return;
+  profileModal.dataset.scrollGuard = "1";
+  profileModal.addEventListener(
+    "close",
+    () => {
+      setProfileModalScrollLock(false);
+    },
+    { passive: true }
+  );
+  profileModal.addEventListener(
+    "wheel",
+    (e) => {
+      const scrollEl = e.target.closest(".profile-modal__body");
+      if (scrollEl) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollEl;
+        const delta = e.deltaY;
+        const atTop = scrollTop <= 0;
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 1;
+        if ((atTop && delta < 0) || (atBottom && delta > 0)) e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      e.preventDefault();
+    },
+    { passive: false }
+  );
+  profileModal.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!e.target.closest(".profile-modal__body")) e.preventDefault();
+    },
+    { passive: false }
+  );
+}
+
+function updateNavbarGreeting() {
+  const who = state.profile?.fullName;
+  const firstName = who ? String(who).trim().split(/\s+/)[0] : "";
+  if (homeMFGreet) homeMFGreet.textContent = firstName ? `Hello, ${firstName}` : "Hello";
+}
+
+function populateProfileModalForm() {
+  if (!profileModal) return;
+  ensureUserProfile(state.data);
+  const prefs = state.data?.cyclePrefs || {};
+  const prof = state.data.userProfile;
+  const nameInp = $$("#profileDisplayName");
+  const dobInp = $$("#profileDateOfBirth");
+  const cycleInp = $$("#profileCycleLength");
+  const periodInp = $$("#profilePeriodLength");
+  const lastInp = $$("#profileLastPeriod");
+  const notifyInp = $$("#profileNotifications");
+  const reminderInp = $$("#profileReminderTime");
+  const autoSaveInp = $$("#profileAutoSaveNotes");
+  const cycleRemInp = $$("#profileCycleReminders");
+  if (nameInp) nameInp.value = state.profile?.fullName || "";
+  if (dobInp) dobInp.value = prof.dateOfBirth || "";
+  if (cycleInp) cycleInp.value = String(prefs.cycleLength ?? 28);
+  if (periodInp) periodInp.value = String(prefs.periodDuration ?? 5);
+  if (lastInp) lastInp.value = prefs.periodStartISO || "";
+  if (notifyInp) notifyInp.checked = prof.notificationsEnabled !== false;
+  if (reminderInp) reminderInp.value = prof.reminderTime || "09:00";
+  if (autoSaveInp) autoSaveInp.checked = prof.autoSaveNotes !== false;
+  if (cycleRemInp) cycleRemInp.checked = prof.cycleRemindersEnabled !== false;
+  const goalSet = new Set(Array.isArray(prof.goals) ? prof.goals : []);
+  $$$("#profileGoalsField input[type=checkbox]").forEach((cb) => {
+    cb.checked = goalSet.has(cb.value);
+  });
+}
+
+function openProfileModal() {
+  if (!profileModal) return;
+  bindProfileModalScrollGuards();
+  populateProfileModalForm();
+  setProfileModalScrollLock(true);
+  openModal(profileModal);
+  requestAnimationFrame(() => $$("#profileDisplayName")?.focus());
+}
+
+function saveProfileFromModal() {
+  if (!state.user || !state.data) return false;
+  const nameInp = $$("#profileDisplayName");
+  const nm = normalizePreferredNameFromOnboarding(nameInp?.value || "");
+  if (nameInp?.value?.trim() && !nm) {
+    showCalmToast("Please use letters for your display name.");
+    nameInp.focus();
+    return false;
+  }
+  ensureUserProfile(state.data);
+  const prof = state.data.userProfile;
+  prof.dateOfBirth = $$("#profileDateOfBirth")?.value || null;
+  prof.notificationsEnabled = Boolean($$("#profileNotifications")?.checked);
+  prof.reminderTime = $$("#profileReminderTime")?.value || "09:00";
+  prof.autoSaveNotes = Boolean($$("#profileAutoSaveNotes")?.checked);
+  prof.cycleRemindersEnabled = Boolean($$("#profileCycleReminders")?.checked);
+  prof.goals = $$$("#profileGoalsField input[type=checkbox]:checked").map((cb) => cb.value);
+  if (!state.data.cyclePrefs) {
+    state.data.cyclePrefs = { cycleLength: 28, periodStartISO: null, periodDuration: 5 };
+  }
+  const cycleLen = clamp(Number($$("#profileCycleLength")?.value) || 28, 15, 60);
+  const periodDur = clamp(Number($$("#profilePeriodLength")?.value) || 5, 2, 10);
+  const lastStart = $$("#profileLastPeriod")?.value || null;
+  state.data.cyclePrefs.cycleLength = cycleLen;
+  state.data.cyclePrefs.periodDuration = periodDur;
+  state.data.cyclePrefs.periodStartISO = lastStart ? String(lastStart) : null;
+  if (nm) {
+    const users = loadUsers();
+    const idx = users.findIndex((u) => storageSessionKey(u) === state.user);
+    if (idx >= 0) {
+      users[idx] = { ...users[idx], fullName: nm };
+      saveUsers(users);
+      state.profile = users[idx];
+    }
+  }
+  saveUserData(state.user, state.data);
+  applyNotificationPrefs();
+  updateNavbarGreeting();
+  refreshAll();
+  showCalmToast("Profile saved.");
+  return true;
+}
+
+function exportUserProfileData() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    profile: state.profile,
+    data: state.data,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ayla-export-${toISODate(new Date())}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showCalmToast("Export started.");
+}
+
+function deleteAllUserProfileData() {
+  if (
+    !window.confirm(
+      "Delete all your Ayla data on this device? This cannot be undone."
+    )
+  ) {
+    return;
+  }
+  state.data = emptyUserData();
+  state.data.onboardingComplete = true;
+  ensureUserProfile(state.data);
+  saveUserData(state.user, state.data);
+  refreshAll();
+  showCalmToast("All data cleared.");
+}
+
+function resetOnboardingFromProfile() {
+  if (!state.data) return;
+  state.data.onboardingComplete = false;
+  saveUserData(state.user, state.data);
+  closeModal(profileModal);
+  openOnboarding();
 }
 
 function showCalmToast(message, opts) {
@@ -4481,6 +5148,7 @@ function persistTodayWellness(model) {
   refreshAll();
 }
 
+const HOME_SYMPTOM_NONE = "None";
 const HOME_SYMPTOM_PICKS = ["Cramps", "Headache", "Acne", "Bloating", "Fatigue", "Tenderness", "Nausea", "Backache"];
 
 function wireHomeSnapSheetsOnce() {
@@ -4492,7 +5160,7 @@ function wireHomeSnapSheetsOnce() {
       if (dlg) closeModal(dlg);
     });
   });
-  [homeSnapMoodSheet, homeSnapEnergySheet, homeSnapSleepSheet, homeWaterSheet, homeSymptomsSheet, homePeriodQuickSheet, homePeriodAdaptiveSheet].forEach((dlg) => {
+  [homeSnapMoodSheet, homeSnapEnergySheet, homeSnapSleepSheet, homeWaterSheet, homeJournalSheet, homeSymptomsSheet, homePeriodQuickSheet, homePeriodAdaptiveSheet].forEach((dlg) => {
     dlg?.addEventListener("click", (ev) => {
       if (ev.target === dlg) closeModal(dlg);
     });
@@ -4503,13 +5171,20 @@ function wireHomeHeroCtasOnce() {
   if (wireHomeHeroCtasOnce._done) return;
   wireHomeHeroCtasOnce._done = true;
   homeHeroPrimaryBtn?.addEventListener("click", () => {
+    if (!homeHeroPrimaryBtn || homeHeroPrimaryBtn.hidden || homeHeroPrimaryBtn.disabled) return;
     const todayISO = toISODate(new Date());
     const a = homeHeroPrimaryBtn?.dataset.homeHeroCta;
+    if (!a) return;
     if (a === "checkin") openCheckin(todayISO);
     else if (a === "symptoms") openHomeSymptomsSheet();
     else if (a === "energy") openHomeEnergySheet();
     else if (a === "mood") openHomeMoodSheet();
-    else if (a === "notes") openCheckin(todayISO);
+    else if (a === "notes") openHomeJournalSheet(todayISO);
+    else if (a === "flow") openAdaptivePeriodFlow({ startStep: "tune-today" });
+    else if (a === "water") openHomeWaterSheet();
+    else if (a === "sleep") openHomeSleepSheet();
+    else if (a === "pain") openCheckin(todayISO);
+    else if (a === "movement") openCheckin(todayISO);
     else if (a === "adaptive-memory") openAdaptivePeriodFlow({ startStep: "memory-ask" });
     else openAdaptivePeriodFlow();
   });
@@ -4520,21 +5195,72 @@ function wireHomeHeroCtasOnce() {
     else if (a === "symptoms") openHomeSymptomsSheet();
     else if (a === "energy") openHomeEnergySheet();
     else if (a === "mood") openHomeMoodSheet();
-    else if (a === "notes") openCheckin(todayISO);
+    else if (a === "notes") openHomeJournalSheet(todayISO);
     else openAdaptivePeriodFlow();
   });
   $$("#homeEmptyStartBtn")?.addEventListener("click", () => openCheckin(toISODate(new Date())));
 }
 
-function refreshHomeWaterSheetLabel() {
-  const el = $$("#homeWaterSheetCount");
-  if (!el) return;
-  el.textContent = homeWaterVal(toISODate(new Date()));
+function refreshHomeWaterSheetDisplay(animate = false) {
+  const countEl = $$("#homeWaterSheetCount");
+  const unitEl = $$("#homeWaterSheetUnit");
+  const readoutEl = $$("#homeWaterSheetReadout");
+  if (!countEl) return;
+  const n = getTodayWaterGlassCount();
+  countEl.textContent = String(n);
+  if (unitEl) unitEl.textContent = n === 1 ? "Glass" : "Glasses";
+  if (readoutEl) readoutEl.setAttribute("aria-label", formatWaterGlassCount(n));
+  if (animate) {
+    countEl.classList.remove("is-changing");
+    void countEl.offsetWidth;
+    countEl.classList.add("is-changing");
+    clearTimeout(countEl._waterAnimT);
+    countEl._waterAnimT = setTimeout(() => countEl.classList.remove("is-changing"), 300);
+  }
 }
 
 function openHomeWaterSheet() {
-  refreshHomeWaterSheetLabel();
+  refreshHomeWaterSheetDisplay(false);
   openModal(homeWaterSheet);
+}
+
+let journalAutoSaveTimer = null;
+
+function saveJournalNoteDraft(iso, text, { silent = false } = {}) {
+  if (!iso || !state.data) return;
+  mergeTodayCheckin({ notes: String(text || "").trim() });
+  if (!silent) showCalmToast("Note saved.");
+}
+
+function scheduleJournalAutoSave() {
+  if (!homeJournalSheet || !homeJournalNoteInput) return;
+  const prof = ensureUserProfile(state.data);
+  if (prof.autoSaveNotes === false) return;
+  clearTimeout(journalAutoSaveTimer);
+  journalAutoSaveTimer = setTimeout(() => {
+    const iso = homeJournalSheet._journalIso || toISODate(new Date());
+    saveJournalNoteDraft(iso, homeJournalNoteInput.value, { silent: true });
+  }, 650);
+}
+
+function openHomeJournalSheet(iso = toISODate(new Date())) {
+  if (!homeJournalSheet || !homeJournalNoteInput) return;
+  wireHomeSnapSheetsOnce();
+  const day = iso || toISODate(new Date());
+  const prev = state.data?.checkins?.[day] || {};
+  homeJournalSheet._journalIso = day;
+  if (homeJournalDate) homeJournalDate.textContent = formatJournalSheetDate(day);
+  homeJournalNoteInput.value = String(prev.notes || "");
+  if (!homeJournalNoteInput.dataset.autoSaveBound) {
+    homeJournalNoteInput.dataset.autoSaveBound = "1";
+    homeJournalNoteInput.addEventListener("input", scheduleJournalAutoSave);
+  }
+  openModal(homeJournalSheet);
+  requestAnimationFrame(() => {
+    homeJournalNoteInput.focus();
+    const len = homeJournalNoteInput.value.length;
+    homeJournalNoteInput.setSelectionRange(len, len);
+  });
 }
 
 function openHomeMoodSheet() {
@@ -4640,7 +5366,7 @@ function recentSymptomsHint() {
     const sy = checkins[d]?.symptoms;
     if (!Array.isArray(sy)) continue;
     sy.forEach((s) => {
-      if (s) seen.add(s);
+      if (s && s !== HOME_SYMPTOM_NONE) seen.add(s);
     });
   }
   const arr = [...seen].filter((s) => HOME_SYMPTOM_PICKS.includes(s)).slice(0, 4);
@@ -4652,27 +5378,51 @@ function openHomeSymptomsSheet() {
   if (!homeSheetSymptomsRoot || !homeSymptomsSheet) return;
   const iso = toISODate(new Date());
   const prev = state.data.checkins[iso] || {};
-  const selected = new Set((Array.isArray(prev.symptoms) ? prev.symptoms : []).filter(Boolean));
-  homeSymptomsSheet._symDraft = selected;
+  const prevSy = (Array.isArray(prev.symptoms) ? prev.symptoms : []).filter(Boolean);
+  homeSymptomsSheet._symDraft = new Set(prevSy.filter((s) => HOME_SYMPTOM_PICKS.includes(s)));
+  homeSymptomsSheet._noneSelected = Boolean(prev.symptomsNone) && homeSymptomsSheet._symDraft.size === 0;
+
+  const syncNoneHint = () => {
+    if (!homeSheetSymptomNoneHint) return;
+    homeSheetSymptomNoneHint.hidden = !homeSymptomsSheet._noneSelected;
+  };
 
   const renderChips = (filter) => {
     const q = (filter || "").trim().toLowerCase();
     homeSheetSymptomsRoot.innerHTML = "";
+    const showNone = !q || HOME_SYMPTOM_NONE.toLowerCase().includes(q);
+    if (showNone) {
+      const noneBtn = document.createElement("button");
+      noneBtn.type = "button";
+      noneBtn.className = "home-sheet-chip home-sheet-chip--none";
+      noneBtn.textContent = HOME_SYMPTOM_NONE;
+      noneBtn.dataset.symptom = HOME_SYMPTOM_NONE;
+      noneBtn.classList.toggle("is-on", homeSymptomsSheet._noneSelected);
+      noneBtn.addEventListener("click", () => {
+        homeSymptomsSheet._noneSelected = !homeSymptomsSheet._noneSelected;
+        if (homeSymptomsSheet._noneSelected) homeSymptomsSheet._symDraft.clear();
+        renderChips(homeSheetSymptomSearch?.value || "");
+      });
+      homeSheetSymptomsRoot.appendChild(noneBtn);
+    }
     HOME_SYMPTOM_PICKS.filter((s) => !q || s.toLowerCase().includes(q)).forEach((sym) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "home-sheet-chip";
       b.textContent = sym;
       b.dataset.symptom = sym;
-      const on = homeSymptomsSheet._symDraft.has(sym);
-      b.classList.toggle("is-on", on);
+      b.classList.toggle("is-on", homeSymptomsSheet._symDraft.has(sym));
       b.addEventListener("click", () => {
         if (homeSymptomsSheet._symDraft.has(sym)) homeSymptomsSheet._symDraft.delete(sym);
-        else homeSymptomsSheet._symDraft.add(sym);
-        b.classList.toggle("is-on", homeSymptomsSheet._symDraft.has(sym));
+        else {
+          homeSymptomsSheet._noneSelected = false;
+          homeSymptomsSheet._symDraft.add(sym);
+        }
+        renderChips(homeSheetSymptomSearch?.value || "");
       });
       homeSheetSymptomsRoot.appendChild(b);
     });
+    syncNoneHint();
   };
 
   if (homeSheetSymptomSearch) {
@@ -7557,6 +8307,7 @@ function completeOnboarding() {
   state.data.cyclePrefs.cycleLength = clamp(Number(onbDraft.cycleLength) || 28, 15, 60);
   state.data.cyclePrefs.periodDuration = clamp(Number(onbDraft.periodDuration) || 5, 2, 10);
   state.data.onboardingComplete = true;
+  ensureUserProfile(state.data);
 
   const nm = normalizePreferredNameFromOnboarding(onbDraft.preferredName);
   if (nm) {
@@ -7752,6 +8503,7 @@ function init() {
   const users = loadUsers();
   state.profile = findUser(users, username);
   state.data = loadUserData(username);
+  applyNotificationPrefs();
 
   state.selectedISO = toISODate(new Date());
   state.viewMonth = startOfMonth(new Date());
@@ -7775,8 +8527,32 @@ function init() {
 
   mobileTabLog?.addEventListener("click", () => openCheckin(toISODate(new Date())));
 
-  mobileTabProfile?.addEventListener("click", () => openModal(settingsModal));
-  topbarProfileBtn?.addEventListener("click", () => openModal(settingsModal));
+  mobileTabProfile?.addEventListener("click", () => openProfileModal());
+  topbarProfileBtn?.addEventListener("click", () => openProfileModal());
+  homeMFGreet?.addEventListener("click", () => openProfileModal());
+  homeMFGreet?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openProfileModal();
+    }
+  });
+  $$("#profileModalClose")?.addEventListener("click", () => closeModal(profileModal));
+  $$("#profileCancelBtn")?.addEventListener("click", () => closeModal(profileModal));
+  $$("#profileSaveBtn")?.addEventListener("click", () => {
+    if (saveProfileFromModal()) closeModal(profileModal);
+  });
+  profileModalForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (saveProfileFromModal()) closeModal(profileModal);
+  });
+  $$("#profileResetOnboardingBtn")?.addEventListener("click", () => {
+    if (window.confirm("Walk through onboarding again? Your logs stay until you change them.")) {
+      resetOnboardingFromProfile();
+    }
+  });
+  $$("#profileExportBtn")?.addEventListener("click", () => exportUserProfileData());
+  $$("#profileDeleteDataBtn")?.addEventListener("click", () => deleteAllUserProfileData());
+  bindProfileModalScrollGuards();
 
   $$$(".mobile-tabbar__item[data-route]").forEach((el) => {
     el.addEventListener("click", (e) => {
@@ -7801,20 +8577,22 @@ function init() {
   });
 
   homeWaterPlusBtn?.addEventListener("click", () => {
-    const iso = toISODate(new Date());
-    const prev = state.data.checkins[iso] || {};
-    const cur = Number(prev.waterGlasses);
-    const next = Number.isFinite(cur) ? clamp(cur + 1, 0, 12) : 1;
+    const next = clamp(getTodayWaterGlassCount() + 1, 0, 12);
     mergeTodayCheckin({ waterGlasses: next });
-    refreshHomeWaterSheetLabel();
+    refreshHomeWaterSheetDisplay(true);
   });
   homeWaterMinusBtn?.addEventListener("click", () => {
-    const iso = toISODate(new Date());
-    const prev = state.data.checkins[iso] || {};
-    const cur = Number(prev.waterGlasses);
-    const next = clamp((Number.isFinite(cur) ? cur : 0) - 1, 0, 12);
+    const next = clamp(getTodayWaterGlassCount() - 1, 0, 12);
     mergeTodayCheckin({ waterGlasses: next });
-    refreshHomeWaterSheetLabel();
+    refreshHomeWaterSheetDisplay(true);
+  });
+
+  homeJournalSaveBtn?.addEventListener("click", () => {
+    const iso = homeJournalSheet?._journalIso || toISODate(new Date());
+    const text = (homeJournalNoteInput?.value || "").trim();
+    mergeTodayCheckin({ notes: text });
+    showCalmToast(text ? "Note saved." : "Note cleared.");
+    closeModal(homeJournalSheet);
   });
 
   homeSheetSymptomsSave?.addEventListener("click", () => {
@@ -7824,9 +8602,14 @@ function init() {
     const prev = state.data.checkins[iso] || {};
     const prevSy = Array.isArray(prev.symptoms) ? prev.symptoms.filter(Boolean) : [];
     const kept = prevSy.filter((s) => !HOME_SYMPTOM_PICKS.includes(s));
-    const picked = [...set].filter((s) => HOME_SYMPTOM_PICKS.includes(s));
-    mergeTodayCheckin({ symptoms: [...kept, ...picked].slice(0, 12) });
-    showCalmToast("Symptoms saved.");
+    if (homeSymptomsSheet._noneSelected) {
+      mergeTodayCheckin({ symptoms: kept, symptomsNone: true });
+      showCalmToast("No symptoms logged today.");
+    } else {
+      const picked = [...set].filter((s) => HOME_SYMPTOM_PICKS.includes(s));
+      mergeTodayCheckin({ symptoms: [...kept, ...picked].slice(0, 12), symptomsNone: false });
+      showCalmToast("Symptoms saved.");
+    }
     closeModal(homeSymptomsSheet);
   });
 
@@ -7836,16 +8619,18 @@ function init() {
     openPeriodModal(toISODate(new Date()));
   });
 
-  const quickRow = $$("#homeQuickLogRow");
-  quickRow?.addEventListener("click", (e) => {
+  const quickPanel = $$(".home-quicklog--panel");
+  quickPanel?.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-home-quick]");
-    if (!btn || !quickRow.contains(btn)) return;
+    if (!btn || !quickPanel.contains(btn)) return;
     const q = btn.getAttribute("data-home-quick");
     pulseHomeQuickChip(btn, q);
     const iso = toISODate(new Date());
     if (q === "period") openAdaptivePeriodFlow();
-    else if (q === "cramps" || q === "symptoms") openHomeSymptomsSheet();
-    else if (q === "notes") openCheckin(iso);
+    else if (q === "cramps" || q === "symptoms" || q === "cravings") openHomeSymptomsSheet();
+    else if (q === "pain") openCheckin(iso);
+    else if (q === "libido") openCheckin(iso);
+    else if (q === "notes") openHomeJournalSheet(iso);
     else if (q === "flow") openAdaptivePeriodFlow({ startStep: "tune-today" });
     else if (q === "water") openHomeWaterSheet();
     else if (q === "energy") openHomeEnergySheet();
