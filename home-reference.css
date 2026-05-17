@@ -122,20 +122,61 @@ html:has(.home-dash) {
   gap: 28px;
 }
 
+.home-dash > .topbar.topbar--app .brand {
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.home-dash > .topbar.topbar--app .brand__text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
 .home-dash > .topbar.topbar--app .brand__tagline {
-  display: none !important;
+  display: block !important;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.32;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.62);
+  text-transform: lowercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 1;
 }
 
 .home-dash > .topbar.topbar--app .brand__mark {
   background: rgba(255, 255, 255, 0.1) !important;
   border-color: rgba(255, 255, 255, 0.15) !important;
+  flex-shrink: 0;
 }
 
 .home-dash > .topbar.topbar--app .brand__name {
   font-family: var(--font-display);
   font-size: 20px;
   font-weight: 600;
+  line-height: 1.1;
   color: #fff;
+}
+
+@media (max-width: 720px) {
+  .home-dash > .topbar.topbar--app .brand__tagline {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+  }
+}
+
+@media (max-width: 520px) {
+  .home-dash > .topbar.topbar--app .brand__tagline {
+    max-width: 9.5rem;
+  }
 }
 
 .topbar__inner--dashboard {

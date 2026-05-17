@@ -40,7 +40,10 @@
 }
 
 .page--dashboard > .topbar.topbar--app .brand__tagline {
-  display: none;
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .page--dashboard > .topbar.topbar--app .brand__name {
