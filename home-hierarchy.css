@@ -1,0 +1,491 @@
+/* Homepage structural hierarchy — center primary, semantic calendar, viewport-safe */
+
+:root {
+  --ayla-shell-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, #4a2838 92%, #6b3850 8%) 0%,
+    color-mix(in srgb, #3d2230 94%, #2a1820 6%) 100%
+  );
+  --ayla-center-bg: #fffdfe;
+  --ayla-wing-bg: rgba(72, 42, 56, 0.05);
+  --ayla-cal-logged: #f37b8d;
+  --ayla-cal-pred: #ffd9c7;
+  --ayla-cal-fertile: #d8c6ff;
+  --ayla-cal-ovu-ring: #9e7cff;
+  --ayla-cal-today-ring: #e95d90;
+  --ayla-phase-period: color-mix(in srgb, var(--ayla-period) 40%, #fff);
+  --ayla-phase-follicular: color-mix(in srgb, var(--ayla-follicular) 40%, #fff);
+  --ayla-phase-ovulation: color-mix(in srgb, var(--ayla-ovulation) 30%, #fff);
+  --ayla-phase-luteal: color-mix(in srgb, var(--ayla-luteal) 35%, #fff);
+  --ayla-space-1: 8px;
+  --ayla-space-2: 16px;
+  --ayla-space-3: 24px;
+  --ayla-space-4: 32px;
+}
+
+/* —— Shell: navbar + footer match —— */
+.page--dashboard > .topbar.topbar--app {
+  min-height: 68px;
+  background: var(--ayla-shell-bg) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.topbar__inner--dashboard {
+  min-height: 68px;
+  padding: 0 32px;
+  box-sizing: border-box;
+}
+
+.page--dashboard > .app-footer {
+  min-height: 56px;
+  opacity: 0.85;
+  background: var(--ayla-shell-bg) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.page--dashboard > .app-footer .app-footer__tagline {
+  font-size: 13px !important;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* —— Compact user pill (no bell, no subtitle) —— */
+.topbar__utilities {
+  align-items: center;
+  gap: var(--ayla-space-2);
+}
+
+.topbar__user-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar__greeting {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  max-width: none;
+  text-align: left;
+}
+
+.topbar__greet-sub {
+  display: none !important;
+}
+
+.topbar__greet-name {
+  margin: 0;
+  font-size: clamp(20px, 1.8vw, 22px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+}
+
+.topbar__utility-btn--notify {
+  display: none !important;
+}
+
+.topbar__utility-btn--profile {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+/* —— 3-column layout —— */
+@media (min-width: 1180px) {
+  .page--dashboard > .dashboard-shell {
+    overflow: visible;
+    min-height: 0;
+  }
+
+  .home-layout.home-layout--master {
+    grid-template-columns: minmax(0, 0.22fr) minmax(0, 0.56fr) minmax(0, 0.22fr);
+    gap: var(--ayla-space-3);
+    align-items: start;
+  }
+
+  .home-layout--master .home-layout__col--left.home-layout__col--secondary,
+  .home-layout--master .home-layout__col--right.home-right-panel {
+    background: var(--ayla-wing-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px;
+    padding: var(--ayla-space-3);
+    padding-bottom: var(--ayla-space-3);
+    box-sizing: border-box;
+    overflow: visible;
+    max-height: none;
+    height: auto;
+    align-self: start;
+  }
+
+  .home-layout--master .home-layout__col--center {
+    background: var(--ayla-center-bg);
+    border-radius: 28px;
+    padding: var(--ayla-space-4);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.92) inset,
+      0 20px 56px rgba(36, 32, 34, 0.06);
+    box-sizing: border-box;
+    align-self: start;
+    overflow: visible;
+  }
+
+  .home-layout--master .home-layout__col--right.home-right-panel--premium {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .app-view--home.app-view--mf,
+  .home-mf.home-root--master {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .home-layout--master {
+    overflow: visible;
+    max-height: none;
+  }
+}
+
+/* —— Left: calendar never clipped —— */
+.home-cal-panel--rail,
+.home-mini-cal--rail {
+  height: auto;
+  min-height: fit-content;
+  overflow: visible;
+}
+
+.home-mini-cal--rail {
+  padding-bottom: var(--ayla-space-3);
+}
+
+.home-mini-cal--rail .home-mini-cal__grid {
+  gap: 8px;
+  height: auto;
+  min-height: fit-content;
+}
+
+/* Neutral default — only sig-* classes add meaning */
+.home-mini-cal--rail .home-mini-cal__cell {
+  min-height: 40px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(22, 22, 22, 0.08);
+  color: rgba(22, 22, 22, 0.82);
+  transition: transform 0.18s ease, box-shadow 0.2s ease;
+}
+
+.home-mini-cal--rail .home-mini-cal__cell[data-phaseviz] {
+  background: #fff;
+  border-color: rgba(22, 22, 22, 0.08);
+  color: rgba(22, 22, 22, 0.82);
+}
+
+.home-mini-cal--rail .home-mini-cal__cell:hover:not(.home-mini-cal__cell--blank) {
+  transform: scale(1.04);
+}
+
+/* Logged period (user-entered) */
+.home-mini-cal--rail .home-mini-cal__cell.sig-period {
+  background: var(--ayla-cal-logged) !important;
+  border-color: color-mix(in srgb, var(--ayla-cal-logged) 85%, #000) !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(243, 123, 141, 0.35);
+}
+
+/* Predicted next period — not logged */
+.home-mini-cal--rail .home-mini-cal__cell.sig-pred:not(.sig-period) {
+  background: var(--ayla-cal-pred) !important;
+  border: 1px solid color-mix(in srgb, var(--ayla-cal-pred) 80%, #d4a888) !important;
+  color: rgba(72, 48, 32, 0.88) !important;
+}
+
+/* Fertile window */
+.home-mini-cal--rail .home-mini-cal__cell.sig-fertile:not(.sig-period):not(.sig-pred) {
+  background: var(--ayla-cal-fertile) !important;
+  border-color: color-mix(in srgb, var(--ayla-cal-fertile) 75%, #9a7acc) !important;
+  color: rgba(56, 40, 96, 0.9) !important;
+}
+
+/* Ovulation — ring + dot */
+.home-mini-cal--rail .home-mini-cal__cell.sig-ovu:not(.sig-period) {
+  background: #fff !important;
+  border: 2px solid var(--ayla-cal-ovu-ring) !important;
+  color: rgba(72, 56, 120, 0.92) !important;
+  box-shadow: 0 0 0 1px rgba(158, 124, 255, 0.2);
+}
+
+.home-mini-cal--rail .home-mini-cal__cell.sig-ovu:not(.sig-period)::after {
+  content: "";
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: var(--ayla-cal-ovu-ring);
+}
+
+.home-mini-cal--rail .home-mini-cal__cell {
+  position: relative;
+}
+
+/* Today — outline only, never fill */
+.home-mini-cal--rail .home-mini-cal__cell.is-today:not(.sig-period) {
+  background: #fff !important;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px var(--ayla-cal-today-ring) !important;
+}
+
+.home-mini-cal--rail .home-mini-cal__cell.is-today.sig-period {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px var(--ayla-cal-today-ring),
+    0 4px 12px rgba(243, 123, 141, 0.35) !important;
+}
+
+/* Readable legend */
+.home-mini-cal--rail .home-mini-cal__legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ayla-space-2);
+  margin-top: var(--ayla-space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.home-mini-cal--rail .home-mini-cal__legend li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: rgba(22, 22, 22, 0.72);
+}
+
+.home-mini-cal__legend-emoji {
+  font-size: 18px;
+  line-height: 1;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.home-mini-cal__legend-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.home-mini-cal__legend-mark--logged {
+  background: var(--ayla-cal-logged);
+}
+
+.home-mini-cal__legend-mark--pred {
+  background: var(--ayla-cal-pred);
+}
+
+.home-mini-cal__legend-mark--fertile {
+  background: var(--ayla-cal-fertile);
+}
+
+.home-mini-cal__legend-mark--ovu {
+  background: #fff;
+  border: 2px solid var(--ayla-cal-ovu-ring);
+  box-sizing: border-box;
+  border-radius: 50%;
+}
+
+.home-mini-cal__legend-mark--today {
+  background: #fff;
+  border: 2px solid var(--ayla-cal-today-ring);
+  box-sizing: border-box;
+  border-radius: 50%;
+}
+
+/* —— Phase timeline: visible segmented progression —— */
+.home-cycle-card__phase-strip.home-cycle-card__phase-timeline {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: var(--ayla-space-2) 0 var(--ayla-space-2);
+  width: 100%;
+  padding: 4px 0;
+}
+
+.home-cycle-card__phase-timeline .home-cycle-card__phase-sep {
+  flex: 1 1 28px;
+  min-width: 12px;
+  max-width: 56px;
+  height: 3px;
+  margin: 0 6px;
+  padding: 0;
+  font-size: 0;
+  line-height: 0;
+  color: transparent;
+  overflow: hidden;
+  background: rgba(22, 22, 22, 0.35);
+  border-radius: 2px;
+  opacity: 0.5;
+}
+
+.home-cycle-card__phase-timeline .home-cycle-card__phase-chip {
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border: 2px solid rgba(22, 22, 22, 0.14);
+  background: rgba(255, 255, 255, 0.65);
+  color: rgba(22, 22, 22, 0.42);
+}
+
+.home-cycle-card__phase-timeline .home-cycle-card__phase-chip.is-current {
+  font-weight: 700;
+  color: rgba(22, 22, 22, 0.92);
+  border-width: 2px;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(36, 32, 34, 0.08);
+}
+
+.home-cycle-card__phase-timeline .home-cycle-card__phase-chip[data-strip-phase="Period"].is-current {
+  background: var(--ayla-phase-period);
+  border-color: color-mix(in srgb, var(--ayla-phase-period) 70%, #c06070);
+}
+
+.home-cycle-card__phase-timeline .home-cycle-card__phase-chip[data-strip-phase="Follicular"].is-current {
+  background: var(--ayla-phase-follicular);
+  border-color: color-mix(in srgb, var(--ayla-phase-follicular) 70%, #c4a080);
+}
+
+.home-cycle-card__phase-timeline .home-cycle-card__phase-chip[data-strip-phase="Ovulation"].is-current {
+  background: var(--ayla-phase-ovulation);
+  border-color: color-mix(in srgb, var(--ayla-phase-ovulation) 70%, #9a7acc);
+}
+
+.home-cycle-card__phase-timeline .home-cycle-card__phase-chip[data-strip-phase="Luteal"].is-current {
+  background: var(--ayla-phase-luteal);
+  border-color: color-mix(in srgb, var(--ayla-phase-luteal) 70%, #b8a080);
+}
+
+/* —— Typography —— */
+.home-layout--master .home-cycle-card__title {
+  font-size: clamp(40px, 4vw, 48px);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.home-layout--master .home-right-panel__title,
+.home-layout--master .home-mf__h--section {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.home-right-panel--premium .home-snap--today .home-right-panel__title {
+  font-size: 32px;
+  font-weight: 650;
+  line-height: 1.15;
+}
+
+.home-right-panel--premium .home-quicklog__title {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.home-right-panel--premium .home-metric__lab {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.home-right-panel--premium .home-metric__val {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.home-right-panel--premium .home-quicklog__action-label,
+.home-cycle-card__cta-primary {
+  font-size: 16px;
+}
+
+/* —— Right panel compact + visible —— */
+.home-right-panel--premium .home-today-card--metrics {
+  padding: 18px;
+  gap: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: auto;
+  min-height: fit-content;
+  overflow: visible;
+}
+
+.home-right-panel--premium .home-metric {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.home-right-panel--premium {
+  --home-icon-wrap: 40px;
+  --home-panel-footer-reserve: calc(var(--dash-footer-h, 56px) + 24px);
+}
+
+.home-right-panel--premium .home-quicklog__grid {
+  gap: 14px;
+}
+
+.home-right-panel--premium .home-quicklog__action {
+  min-height: 82px;
+  padding: 14px;
+  gap: 10px;
+}
+
+.home-right-panel--premium .home-snap--today {
+  margin-bottom: var(--ayla-space-3);
+}
+
+.home-right-panel--premium .home-quicklog__intro-sub {
+  max-width: 90%;
+  line-height: 1.5;
+}
+
+/* Tooltips above viz */
+.home-viz-wrap .home-viz-tooltip {
+  top: -48px;
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  max-width: 160px;
+}
+
+.home-mf__header--hero {
+  display: none;
+}
+
+@media (max-width: 1179px) {
+  .topbar__inner--dashboard {
+    padding: 0 16px;
+  }
+
+  .home-right-panel--premium {
+    padding-bottom: calc(var(--dash-tabbar-h, 72px) + var(--dash-footer-h, 56px) + 24px);
+  }
+}

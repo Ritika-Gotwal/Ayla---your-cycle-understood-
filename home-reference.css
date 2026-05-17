@@ -1,0 +1,2310 @@
+/* Ayla dashboard — reference layout rebuild (loads last, authoritative) */
+
+:root {
+  --dash-bg: #fbf6f8;
+  --dash-center: #fffdfe;
+  --dash-shell: linear-gradient(90deg, #462738 0%, #5a3245 100%);
+  --dash-nav-h: 72px;
+  --dash-footer-h: 56px;
+  --dash-ink: #1e181c;
+  --dash-muted: #716b73;
+  --dash-berry: #e95b8e;
+  --dash-rose: #f67e92;
+  --dash-peach: #ffd8c8;
+  --dash-lavender: #d7c4ff;
+  --dash-ovu: #9d80ff;
+  --dash-luteal: #f3e5ab;
+  --dash-luteal-ink: #8a7840;
+  --dash-shadow: 0 8px 30px rgba(0, 0, 0, 0.03);
+  --dash-shadow-soft: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --dash-bar-track: #f0e8eb;
+  --dash-radius: 22px;
+  --dash-gap: 24px;
+  --dash-section-gap: 28px;
+  --dash-pad: 18px;
+  --dash-sidebar-w: 320px;
+  --dash-sidebar-w-collapsed: 72px;
+  --dash-sidebar-active-w: var(--dash-sidebar-w);
+  --dash-icon: 31px;
+  --dash-cell: 34px;
+  --dash-cal-gap: 6px;
+}
+
+/* ── Viewport shell ───────────────────────────────────────── */
+
+html:has(.home-dash) {
+  height: 100%;
+  overflow: hidden;
+}
+
+.home-dash {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden !important;
+  background: var(--dash-bg) !important;
+}
+
+.home-dash > .dashboard-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-dash #view-home,
+.home-dash .home-mf.home-root--master {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--dash-bg) !important;
+}
+
+.home-dash .app-view--home.app-view--mf {
+  width: 100% !important;
+  max-width: none !important;
+  overflow: hidden !important;
+}
+
+.home-mf__wash,
+.home-mf__ambient,
+.home-mf__spacer {
+  display: none !important;
+}
+
+/* ── Navbar + footer (identical gradient) ─────────────────── */
+
+.home-dash > .topbar.topbar--app {
+  flex: 0 0 var(--dash-nav-h);
+  height: var(--dash-nav-h);
+  min-height: var(--dash-nav-h) !important;
+  width: 100% !important;
+  max-width: none !important;
+  background: var(--dash-shell) !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+.home-dash > .app-footer {
+  flex: 0 0 var(--dash-footer-h);
+  height: var(--dash-footer-h);
+  min-height: var(--dash-footer-h) !important;
+  width: 100% !important;
+  max-width: none !important;
+  background: var(--dash-shell) !important;
+  border: none !important;
+  padding: 0 32px;
+  box-sizing: border-box;
+  opacity: 0.88 !important;
+  box-shadow: none !important;
+}
+
+.home-dash > .topbar.topbar--app .brand__tagline {
+  display: none !important;
+}
+
+.home-dash > .topbar.topbar--app .brand__mark {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.home-dash > .topbar.topbar--app .brand__name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.topbar__inner--dashboard {
+  height: 100%;
+  min-height: var(--dash-nav-h) !important;
+  padding: 0 32px !important;
+  max-width: none !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+}
+
+.topbar__inner--dashboard .topbar__brand {
+  justify-self: start;
+}
+
+.topbar__inner--dashboard .app-nav {
+  justify-self: center;
+}
+
+.topbar__inner--dashboard .topbar__utilities {
+  justify-self: end;
+}
+
+.home-dash > .topbar.topbar--app .app-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.home-dash > .topbar.topbar--app .app-nav__tab {
+  padding: 8px 22px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  box-shadow: none !important;
+}
+
+.home-dash > .topbar.topbar--app .app-nav__tab.is-active,
+.home-dash > .topbar.topbar--app .app-nav__tab[aria-current="page"] {
+  background: rgba(0, 0, 0, 0.22);
+  color: #fff;
+}
+
+.topbar__user-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+}
+
+.topbar__utility-btn--profile {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  color: #fff !important;
+}
+
+.topbar__greet-name {
+  font-family: var(--font-display);
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  margin: 0;
+  color: #fff !important;
+}
+
+.topbar__user-pill::after {
+  content: "⌄";
+  font-size: 12px;
+  opacity: 0.7;
+  border: none;
+  transform: none;
+  width: auto;
+  height: auto;
+}
+
+.topbar__utility-btn--notify,
+.topbar__greet-sub {
+  display: none !important;
+}
+
+.home-dash > .app-footer .app-footer__tagline {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+.home-dash > .app-footer .app-footer__link {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* ── 3-column grid (center dominates) ─────────────────────── */
+
+.home-layout.home-layout--reference {
+  max-width: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+@media (min-width: 1180px) {
+  .home-dash > .dashboard-shell {
+    padding-bottom: 0 !important;
+  }
+
+  .home-layout.home-layout--reference.home-layout--master {
+    display: grid !important;
+    grid-template-columns: var(--dash-sidebar-active-w) minmax(0, 1fr) minmax(248px, 22%) !important;
+    column-gap: 24px !important;
+    row-gap: 0 !important;
+    transition: grid-template-columns 0.35s ease;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: calc(100vh - var(--dash-nav-h) - var(--dash-footer-h));
+    max-height: calc(100dvh - var(--dash-nav-h) - var(--dash-footer-h));
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    height: calc(100vh - var(--dash-nav-h) - var(--dash-footer-h));
+    height: calc(100dvh - var(--dash-nav-h) - var(--dash-footer-h));
+    padding: 0 24px 0 0;
+    box-sizing: border-box;
+    overflow: hidden !important;
+    align-items: stretch;
+  }
+
+  .home-layout--reference .home-layout__col--left.home-sidebar {
+    position: relative;
+    width: var(--dash-sidebar-active-w);
+    max-width: var(--dash-sidebar-active-w);
+    min-width: var(--dash-sidebar-active-w);
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    margin: 0;
+    padding: var(--left-sidebar-pad-y, 14px) var(--left-sidebar-pad-x, 16px) var(--left-sidebar-pad-bottom, 16px) !important;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    justify-content: flex-start;
+    align-self: stretch;
+    background: var(--dash-shell) !important;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    opacity: 1;
+    box-sizing: border-box;
+    transition:
+      width 0.35s ease,
+      min-width 0.35s ease,
+      max-width 0.35s ease,
+      padding 0.35s ease;
+  }
+
+  .home-layout--reference.is-sidebar-collapsed {
+    --dash-sidebar-active-w: var(--dash-sidebar-w-collapsed);
+  }
+
+  .home-layout--reference .home-layout__col--center {
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    padding: 18px 0 18px 24px !important;
+  }
+
+  .home-layout--reference .home-layout__col--center .home-stage {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .home-layout--reference .home-layout__col--right {
+    min-height: 0;
+    max-height: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 18px 0 !important;
+    background: transparent !important;
+    border-radius: 0;
+    box-sizing: border-box;
+    --home-panel-footer-reserve: 0 !important;
+    --home-panel-inline: 0 !important;
+  }
+}
+
+/* ═══════════════════════════════════════
+   LEFT — match reference image exactly
+   ═══════════════════════════════════════ */
+
+.home-layout--reference .home-layout__col--left.home-sidebar {
+  /* Sidebar — identical shell to navbar + footer (continuous left rail) */
+  background: var(--dash-shell);
+  --left-sidebar-label: #a89ca6;
+  --left-sidebar-pad-y: 14px;
+  --left-sidebar-pad-x: 16px;
+  --left-sidebar-pad-bottom: 16px;
+  --left-toggle-clearance: 40px;
+  --left-guidance-h: 148px;
+  --left-guidance-pad: 16px;
+  --left-guidance-item-gap: 6px;
+  --left-guidance-cal-gap: 22px;
+  --left-stack-gap: 0;
+  --left-section-gap: 10px;
+  --left-cal-header-gap: 6px;
+  --left-cal-pad-bottom: 16px;
+  --left-legend-gap: 8px;
+  --left-cal-card-radius: 24px;
+  --left-cal-cell-max: 34px;
+  --left-cal-gap: 5px;
+  --today: #3bb273;
+  --phase-today-ring: var(--today);
+  --phase-ovulation-ring: var(--ayla-ovulation);
+}
+
+/* ── Collapsible sidebar ──────────────────────────────────── */
+
+.home-sidebar {
+  position: relative;
+}
+
+.home-sidebar__toggle {
+  position: absolute;
+  top: 16px;
+  right: 12px;
+  z-index: 10;
+  width: 38px;
+  height: 38px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.home-sidebar__toggle:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.home-sidebar__toggle-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.home-sidebar__toggle[data-sidebar-chevron="right"] .home-sidebar__toggle-icon {
+  transform: scaleX(-1);
+}
+
+.home-sidebar__shortcut-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.home-layout--reference .home-mini-cal__nav svg {
+  display: block;
+}
+
+.home-sidebar:not(.is-sidebar-collapsed) .home-sidebar__expandable {
+  margin-top: var(--left-toggle-clearance);
+}
+
+.home-sidebar__expandable {
+  display: flex;
+  flex-direction: column;
+  gap: var(--left-stack-gap);
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  opacity: 1;
+  transform: translateX(0);
+  overflow: hidden;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease,
+    max-height 0.35s ease;
+}
+
+.home-sidebar.is-sidebar-collapsed .home-sidebar__expandable {
+  flex: 0 0 0;
+  max-height: 0;
+  opacity: 0;
+  transform: translateX(-8px);
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.home-sidebar__collapsed-nav {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 52px;
+  width: 100%;
+}
+
+.home-sidebar.is-sidebar-collapsed .home-sidebar__collapsed-nav {
+  display: flex;
+}
+
+.home-sidebar__shortcut {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.95);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.home-sidebar__shortcut:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.home-sidebar__shortcut-icon {
+  font-size: 0;
+  line-height: 0;
+}
+
+.home-sidebar.is-sidebar-collapsed {
+  padding: 16px 10px 24px !important;
+  align-items: center;
+}
+
+.home-sidebar.is-sidebar-collapsed .home-sidebar__toggle {
+  position: relative;
+  top: auto;
+  right: auto;
+  align-self: center;
+  margin-bottom: 8px;
+}
+
+.home-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: var(--dash-nav-h) 0 var(--dash-footer-h) 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: rgba(30, 24, 28, 0.4);
+  z-index: 190;
+  cursor: pointer;
+}
+
+.home-sidebar-backdrop.is-visible {
+  display: block;
+}
+
+.home-layout--reference .home-guidance-block {
+  flex: 0 0 auto;
+  margin: 0 0 var(--left-guidance-cal-gap);
+}
+
+.home-layout--reference .home-guidance-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 var(--left-section-gap);
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-guidance-panel__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--left-sidebar-label);
+}
+
+.home-layout--reference .home-guidance-panel__icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.home-layout--reference .home-guidance-panel__title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  color: var(--left-sidebar-label);
+  text-transform: none;
+}
+
+.home-layout--reference .home-today-card--compact {
+  width: 100%;
+  height: var(--left-guidance-h);
+  min-height: var(--left-guidance-h);
+  max-height: var(--left-guidance-h);
+  flex: 0 0 var(--left-guidance-h);
+  padding: 16px 18px !important;
+  border-radius: var(--dash-radius);
+  background: #fff;
+  box-shadow: var(--dash-shadow-soft);
+  margin: 0;
+  border: none;
+  overflow: hidden;
+  display: block;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-today-card__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+
+.home-layout--reference .home-today-card__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 var(--left-guidance-item-gap);
+  font-size: 14px;
+  line-height: 1.45;
+  color: #757575;
+}
+
+.home-layout--reference .home-today-card__item:last-child {
+  margin-bottom: 0;
+}
+
+.home-layout--reference .home-today-card__bullet {
+  flex: 0 0 6px;
+  width: 6px;
+  height: 6px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--left-sidebar-label) !important;
+  color: transparent !important;
+  font-size: 0;
+  font-weight: 400;
+}
+
+.home-layout--reference .home-today-card__text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.45;
+  overflow: hidden;
+}
+
+.home-layout--reference .home-cal-panel--rail {
+  flex: 0 0 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+  justify-content: flex-start;
+}
+
+.home-layout--reference .home-cal-panel__header {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 var(--left-cal-header-gap);
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-cal-panel__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--left-sidebar-label);
+}
+
+.home-layout--reference .home-cal-panel__icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
+.home-layout--reference .home-cal-panel__title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  color: var(--left-sidebar-label);
+  text-transform: none;
+}
+
+.home-layout--reference .home-mini-cal--rail {
+  flex: 0 0 auto;
+  min-height: auto;
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 10px 10px var(--left-cal-pad-bottom) !important;
+  border-radius: var(--left-cal-card-radius);
+  background: #fff;
+  box-shadow: var(--dash-shadow-soft);
+  border: none;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-mini-cal__head,
+.home-layout--reference .home-mini-cal__weekdays,
+.home-layout--reference .home-mini-cal__grid,
+.home-layout--reference .home-mini-cal__legend-wrap {
+  flex-shrink: 0;
+}
+
+.home-layout--reference .home-mini-cal__head {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 4px;
+  padding: 0 2px;
+  min-height: 24px;
+}
+
+.home-layout--reference .home-mini-cal__nav {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: #fff;
+  color: #757575;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-layout--reference .home-mini-cal__nav:hover {
+  background: #fff;
+  transform: none;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.home-layout--reference .home-mini-cal__title {
+  flex: 1 1 auto;
+  margin: 0;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: #333;
+  line-height: 1.2;
+}
+
+.home-layout--reference .home-mini-cal__weekdays {
+  flex: 0 0 auto;
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  gap: var(--left-cal-gap) !important;
+  justify-items: center;
+  align-items: center;
+  width: 100% !important;
+  max-width: 100%;
+  margin: 0 0 4px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: #9a9399;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-mini-cal__weekdays span {
+  text-align: center;
+}
+
+.home-layout--reference .home-mini-cal__grid {
+  flex: 0 0 auto;
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  grid-template-rows: none !important;
+  gap: var(--left-cal-gap) !important;
+  justify-items: center;
+  align-items: center;
+  width: 100% !important;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-mini-cal__cell,
+.home-layout--reference .home-mini-cal__cell--blank {
+  width: 100% !important;
+  max-width: var(--left-cal-cell-max);
+  aspect-ratio: 1;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  font-weight: 500;
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0 !important;
+  background: #fff !important;
+  border: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+  box-sizing: border-box;
+  color: #333;
+  opacity: 1 !important;
+  position: static !important;
+  transform: none !important;
+}
+
+.home-layout--reference .home-mini-cal__cell--blank {
+  pointer-events: none;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: default;
+}
+
+.home-layout--reference .home-mini-cal__cell--blank .home-mini-cal__num {
+  color: #c4bcc0;
+  font-weight: 400;
+}
+
+.home-layout--reference .home-mini-cal__cell:hover {
+  transform: none;
+}
+
+.home-layout--reference .home-mini-cal__dots {
+  display: none !important;
+}
+
+.home-layout--reference .home-mini-cal__num {
+  line-height: 1;
+}
+
+/* Four-phase cycle map — colors = biological meaning (overrides global gradients) */
+.home-layout--reference .home-mini-cal__cell[data-phaseviz] {
+  background-image: none !important;
+}
+
+.home-layout--reference .home-mini-cal__cell[data-phaseviz="period"] {
+  background: var(--phase-period) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.home-layout--reference .home-mini-cal__cell[data-phaseviz="follicular"] {
+  background: var(--phase-follicular) !important;
+  color: #333 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.home-layout--reference .home-mini-cal__cell[data-phaseviz="ovulation"] {
+  background: #fff !important;
+  color: #333 !important;
+  border: 2px solid var(--ayla-ovulation) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.home-layout--reference .home-mini-cal__cell[data-phaseviz="luteal"] {
+  background: var(--phase-luteal) !important;
+  color: #333 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Today — green ring only (inset so it does not clip outside cell) */
+.home-layout--reference .home-mini-cal__cell.is-today {
+  outline: none !important;
+  box-shadow: inset 0 0 0 2px var(--today) !important;
+  z-index: 0;
+  animation: none !important;
+}
+
+.home-layout--reference .home-mini-cal__cell.is-today[data-phaseviz="ovulation"] {
+  border-color: var(--ayla-ovulation) !important;
+  box-shadow: inset 0 0 0 2px var(--today) !important;
+}
+
+/* Passive timeline — no selection, clicks, or hover emphasis */
+.home-layout--reference .home-mini-cal--passive .home-mini-cal__cell {
+  pointer-events: none;
+  cursor: default;
+  user-select: none;
+}
+
+.home-layout--reference .home-mini-cal--passive .home-mini-cal__num {
+  font-weight: 500 !important;
+}
+
+.home-layout--reference .home-mini-cal--passive .home-mini-cal__cell:hover {
+  transform: none !important;
+}
+
+.home-layout--reference .home-mini-cal--passive .home-mini-cal__cell:active,
+.home-layout--reference .home-mini-cal--passive .home-mini-cal__cell:focus,
+.home-layout--reference .home-mini-cal--passive .home-mini-cal__cell:focus-visible {
+  transform: none !important;
+}
+
+.home-layout--reference .home-mini-cal--passive .home-mini-cal__cell.sig-period,
+.home-layout--reference .home-mini-cal--passive .home-mini-cal__cell.sig-ovu,
+.home-layout--reference .home-mini-cal--passive .home-mini-cal__cell.home-mini-cal__cell--period-start .home-mini-cal__num {
+  font-weight: 500 !important;
+}
+
+/* Calendar legend — inside card, never clipped */
+.home-layout--reference .home-mini-cal__legend-wrap,
+.home-layout--reference .calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  align-content: flex-start;
+  row-gap: 8px;
+  column-gap: 12px;
+  gap: 8px 12px;
+  flex: 0 0 auto !important;
+  flex-shrink: 0 !important;
+  margin-top: var(--left-legend-gap) !important;
+  margin-bottom: 0 !important;
+  padding: 8px 6px 0 !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: visible;
+  visibility: visible !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-mini-cal__legend-wrap > *:last-child,
+.home-layout--reference .calendar-legend > *:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.home-layout--reference .home-mini-cal__legend--phases {
+  display: flex !important;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-content: flex-start;
+  align-items: flex-start;
+  row-gap: 8px;
+  column-gap: 12px;
+  gap: 8px 12px;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/* Force row 2: Luteal after first three phases */
+.home-layout--reference .home-mini-cal__legend--phases .home-mini-cal__legend-item:nth-child(3)::after {
+  content: "";
+  flex-basis: 100%;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.home-layout--reference .home-mini-cal__legend--phases .home-mini-cal__legend-item {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  cursor: default;
+  pointer-events: none;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.home-layout--reference .home-mini-cal__legend-dot {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-mini-cal__legend-dot--period {
+  background: var(--ayla-period);
+  box-shadow: 0 1px 2px rgba(255, 107, 129, 0.35);
+}
+
+.home-layout--reference .home-mini-cal__legend-dot--follicular {
+  background: var(--ayla-follicular);
+  box-shadow: 0 1px 2px rgba(246, 195, 107, 0.35);
+}
+
+.home-layout--reference .home-mini-cal__legend-dot--ovulation {
+  background: #fff;
+  border: 2px solid var(--ayla-ovulation);
+  box-shadow: none;
+}
+
+.home-layout--reference .home-mini-cal__legend-dot--luteal {
+  background: var(--ayla-luteal);
+  box-shadow: 0 1px 2px rgba(185, 156, 255, 0.35);
+}
+
+.home-layout--reference .home-mini-cal__legend-dot--today {
+  display: none;
+}
+
+.home-layout--reference .home-mini-cal__legend-label {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #444 !important;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+/* Removed cycle-flow line — legend items are the final in-card content */
+.home-layout--reference .home-mini-cal__legend-flow {
+  display: none !important;
+}
+
+/* Block legacy global legend styles from hiding or overriding phase key */
+.home-layout--reference .home-mini-cal--rail .home-mini-cal__legend--phases .home-mini-cal__legend-emoji,
+.home-layout--reference .home-mini-cal--rail .home-mini-cal__legend--phases .home-mini-cal__legend-mark {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════
+   CENTER — primary hero (dominates)
+   ═══════════════════════════════════════ */
+
+.home-layout--reference .home-cycle-card--hero {
+  --center-col-max: 36rem;
+  --center-gap-xs: 8px;
+  --center-gap-sm: 12px;
+  --center-gap-md: 20px;
+  --center-gap-lg: 28px;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 40px 36px !important;
+  border-radius: 29px !important;
+  background: var(--dash-center) !important;
+  box-shadow: var(--dash-shadow) !important;
+  border: none !important;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-cycle-card__hero,
+.home-layout--reference .home-cycle-card__metrics {
+  overflow: visible;
+}
+
+.home-layout--reference .home-cycle-card__hero {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: var(--center-col-max);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0;
+  margin: 0 auto;
+}
+
+.home-layout--reference .home-cycle-card__sub,
+.home-layout--reference .home-cycle-card__cta-support {
+  display: none !important;
+}
+
+.home-layout--reference .home-hero-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  overflow: visible;
+}
+
+.home-layout--reference .home-hero-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+  gap: var(--center-gap-md);
+}
+
+.home-layout--reference .home-hero-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.home-layout--reference .home-cycle-card__kicker {
+  display: block !important;
+  width: 100%;
+  margin: 0 0 var(--center-gap-xs);
+  padding: 0;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--dash-muted);
+}
+
+.home-layout--reference .home-cycle-card__title {
+  font-family: var(--font-display) !important;
+  font-size: clamp(2.35rem, 2.6vw + 1.1rem, 3.25rem) !important;
+  font-weight: 600 !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.025em;
+  color: var(--dash-ink) !important;
+  margin: 0 !important;
+  padding: 0;
+  width: 100%;
+  max-width: none;
+  text-align: center;
+}
+
+.home-layout--reference .home-cycle-card__meta {
+  width: 100%;
+  margin: 2px 0 0;
+  padding: 0;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--dash-muted);
+}
+
+.home-layout--reference .home-cycle-card__meta:not([hidden]) {
+  display: block;
+}
+
+.home-layout--reference .home-cycle-card__today-lead {
+  font-family: var(--font) !important;
+  font-size: 17px !important;
+  font-weight: 400 !important;
+  color: var(--dash-muted) !important;
+  margin: var(--center-gap-sm) 0 0 !important;
+  padding: 0;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  width: 100%;
+  max-width: 30ch;
+  text-align: center;
+}
+
+.home-layout--reference .home-cycle-card__section-label {
+  display: block;
+  width: 100%;
+  margin: 0 0 var(--center-gap-xs);
+  padding: 0;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--dash-muted);
+}
+
+.home-layout--reference .home-hero-journey,
+.home-layout--reference .home-hero-actions,
+.home-layout--reference .home-hero-forecast {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: var(--center-col-max);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-hero-journey {
+  gap: var(--center-gap-sm);
+}
+
+.home-layout--reference .home-hero-actions {
+  gap: var(--center-gap-xs);
+  margin-top: var(--center-gap-sm);
+}
+
+.home-layout--reference .home-hero-forecast {
+  gap: var(--center-gap-xs);
+  margin-top: var(--center-gap-sm);
+  padding-top: var(--center-gap-md);
+  border-top: 1px solid rgba(72, 42, 56, 0.08);
+}
+
+.home-layout--reference #homeOrbPanel[hidden] {
+  display: none !important;
+}
+
+.home-layout--reference .home-cycle-card__ctas {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
+  max-width: 22rem;
+  margin: 0 !important;
+  padding: 0;
+  gap: 10px !important;
+  flex-wrap: nowrap;
+}
+
+.home-layout--reference .home-cycle-card__cta-primary,
+.home-layout--reference .home-cycle-card__cta-secondary {
+  flex: 0 0 auto;
+  width: 100% !important;
+  min-width: 0;
+  padding: 0 20px !important;
+  border-radius: 999px !important;
+  font-family: var(--font) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.home-layout--reference .home-cycle-card__cta-primary {
+  height: 54px !important;
+  min-height: 54px !important;
+}
+
+.home-layout--reference .home-cycle-card__cta-secondary {
+  height: auto !important;
+  min-height: 44px !important;
+}
+
+.home-layout--reference .home-cycle-card__cta-primary {
+  background: var(--dash-berry) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 8px 20px rgba(232, 85, 138, 0.15) !important;
+}
+
+.home-layout--reference .home-cycle-card__cta-secondary {
+  background: transparent !important;
+  border: none !important;
+  color: var(--dash-berry) !important;
+  box-shadow: none !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
+
+/* Phase snapshot — centered, same column width as copy above */
+.home-layout--reference .home-orb-panel--hero.home-orb-panel--centered {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 14rem;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 auto;
+  padding: 10px 16px;
+  border-radius: 18px;
+  background: #fff !important;
+  box-shadow: var(--dash-shadow-soft);
+  border: 1px solid rgba(72, 42, 56, 0.06);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-orb-panel--centered .home-orb-panel__inner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.home-layout--reference .home-orb-panel--centered .home-orb-panel__viz {
+  margin: 0 auto;
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+.home-layout--reference .home-orb-panel--centered .home-viz-wrap--compact,
+.home-layout--reference .home-orb-panel--centered .home-viz-wrap--compact .wellness-viz--homehero,
+.home-layout--reference .home-orb-panel--centered .home-viz-wrap--compact .wellness-viz__stage {
+  width: 64px;
+  height: 64px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.home-layout--reference .home-orb-panel--centered .home-orb-panel__readout {
+  display: none !important;
+}
+
+.home-layout--reference .home-viz-wrap--compact,
+.home-layout--reference .home-viz-wrap--compact .wellness-viz--homehero {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: transparent !important;
+}
+
+.home-layout--reference .home-viz-wrap--compact .home-viz-wrap__depth {
+  display: none !important;
+}
+
+.home-layout--reference .home-orb-panel__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.home-layout--reference .home-orb-panel__viz {
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 0 0 14px;
+}
+
+.home-layout--reference .home-viz-wrap--compact {
+  width: 92px;
+  height: 92px;
+  margin: 0 auto;
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz--homehero {
+  width: 92px;
+  height: 92px;
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz__stage {
+  transform: none;
+  transform-origin: center center;
+  width: 92px;
+  height: 92px;
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz__core {
+  width: 72%;
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz__ring .wellness-viz__arc {
+  opacity: 0.22;
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz[data-phase="period"] .wellness-viz__arc--period,
+.home-layout--reference .home-viz-wrap--compact .wellness-viz[data-phase="follicular"] .wellness-viz__arc--follicular,
+.home-layout--reference .home-viz-wrap--compact .wellness-viz[data-phase="ovulation"] .wellness-viz__arc--ovulation,
+.home-layout--reference .home-viz-wrap--compact .wellness-viz[data-phase="luteal"] .wellness-viz__arc--luteal {
+  opacity: 1;
+  stroke-width: 8;
+  filter: url(#wellnessVizGlow);
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz__arc--period {
+  color: var(--phase-period);
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz__arc--follicular {
+  color: var(--phase-follicular);
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz__arc--ovulation {
+  color: var(--phase-ovulation);
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz__arc--luteal {
+  color: var(--phase-luteal);
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz--homehero[data-phase="period"] .wellness-viz__core-orb {
+  background:
+    radial-gradient(circle at 28% 18%, #fff 0%, rgba(255, 236, 242, 0.98) 14%, rgba(255, 107, 129, 0.55) 52%, rgba(255, 80, 110, 0.42) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+    0 12px 28px rgba(255, 107, 129, 0.35),
+    0 0 36px rgba(255, 107, 129, 0.45);
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz--homehero[data-phase="follicular"] .wellness-viz__core-orb {
+  background:
+    radial-gradient(circle at 24% 20%, #fff 0%, rgba(255, 248, 236, 0.98) 14%, rgba(246, 195, 107, 0.58) 52%, rgba(230, 165, 70, 0.4) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+    0 12px 28px rgba(246, 195, 107, 0.32),
+    0 0 36px rgba(246, 195, 107, 0.38);
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz--homehero[data-phase="ovulation"] .wellness-viz__core-orb {
+  background:
+    radial-gradient(circle at 26% 20%, #fff 0%, rgba(248, 242, 255, 0.98) 14%, rgba(142, 99, 255, 0.52) 50%, rgba(120, 80, 230, 0.38) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+    0 12px 28px rgba(142, 99, 255, 0.3),
+    0 0 40px rgba(142, 99, 255, 0.42);
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz--homehero[data-phase="luteal"] .wellness-viz__core-orb {
+  background:
+    radial-gradient(circle at 26% 20%, #fff 0%, rgba(248, 244, 255, 0.98) 14%, rgba(185, 156, 255, 0.55) 52%, rgba(160, 130, 230, 0.38) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset,
+    0 12px 28px rgba(185, 156, 255, 0.3),
+    0 0 36px rgba(185, 156, 255, 0.4);
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz--homehero[data-phase="period"] .wellness-viz__core-bloom {
+  opacity: 0.78;
+  background: conic-gradient(from 180deg, rgba(255, 107, 129, 0.35), rgba(255, 140, 160, 0.2), rgba(255, 200, 210, 0.28), rgba(255, 107, 129, 0.35));
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz--homehero[data-phase="follicular"] .wellness-viz__core-bloom {
+  opacity: 0.78;
+  background: conic-gradient(from 160deg, rgba(246, 195, 107, 0.32), rgba(255, 220, 170, 0.18), rgba(246, 195, 107, 0.28), rgba(246, 195, 107, 0.32));
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz--homehero[data-phase="ovulation"] .wellness-viz__core-bloom {
+  opacity: 0.8;
+  background: conic-gradient(from 140deg, rgba(142, 99, 255, 0.34), rgba(180, 150, 255, 0.2), rgba(142, 99, 255, 0.3), rgba(142, 99, 255, 0.34));
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz--homehero[data-phase="luteal"] .wellness-viz__core-bloom {
+  opacity: 0.78;
+  background: conic-gradient(from 200deg, rgba(185, 156, 255, 0.32), rgba(210, 190, 255, 0.18), rgba(185, 156, 255, 0.28), rgba(185, 156, 255, 0.32));
+}
+
+.home-layout--reference .home-viz-wrap--compact .wellness-viz--homehero .wellness-viz__orbit {
+  opacity: 1;
+}
+
+.home-layout--reference .home-orb-panel__readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-top: auto;
+  gap: 4px;
+}
+
+.home-layout--reference .home-orb-panel__phase {
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dash-ink);
+  text-align: center;
+  margin: 0;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
+.home-layout--reference .home-orb-panel__day {
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dash-muted);
+  text-align: center;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.home-layout--reference .home-orb-panel__conf {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--dash-muted);
+  text-align: center;
+  margin: 6px 0 0;
+  line-height: 1.45;
+  max-width: 100%;
+}
+
+.home-layout--reference .home-orb-panel__support {
+  display: none !important;
+}
+
+/* Metrics block — same center column as hero copy */
+.home-layout--reference .home-cycle-card__metrics {
+  flex: 0 0 auto;
+  min-height: 0;
+  width: 100%;
+  max-width: var(--center-col-max);
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--center-gap-sm);
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-cycle-card__prog-head {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--dash-muted);
+}
+
+.home-layout--reference .home-cycle-card__prog-head[hidden],
+.home-layout--reference .home-cycle-card__prog-head:empty {
+  display: none !important;
+}
+
+.home-layout--reference .home-hero-glance {
+  width: 100%;
+  max-width: var(--center-col-max);
+  margin: var(--center-gap-xs) 0 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(232, 85, 138, 0.08);
+  border: 1px solid rgba(232, 85, 138, 0.14);
+  box-sizing: border-box;
+}
+
+.home-layout--reference .home-hero-glance[hidden] {
+  display: none !important;
+}
+
+.home-layout--reference .home-hero-glance__text {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--dash-ink);
+}
+
+.home-layout--reference .home-cycle-card__phase-arrow {
+  font-size: 0;
+  width: 12px;
+  position: relative;
+}
+
+.home-layout--reference .home-cycle-card__phase-arrow::after {
+  content: "→";
+  font-size: 13px;
+  line-height: 1;
+  color: rgba(72, 42, 56, 0.45);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.home-layout--reference .home-cycle-card__phase-timeline {
+  display: flex !important;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 8px;
+  margin: 0 !important;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.home-layout--reference .home-cycle-card__phase-timeline::-webkit-scrollbar {
+  display: none;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 7px 11px !important;
+  border-radius: 999px !important;
+  background: #fff !important;
+  border: 1px solid rgba(72, 42, 56, 0.1) !important;
+  min-width: 0 !important;
+  flex-shrink: 0;
+  box-shadow: none !important;
+  transition:
+    background 0.4s ease,
+    border-color 0.4s ease,
+    border-width 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+.home-layout--reference .home-cycle-card__phase-ico {
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition:
+    background 0.4s ease,
+    border-color 0.4s ease,
+    box-shadow 0.4s ease,
+    color 0.4s ease;
+}
+
+.home-layout--reference .home-cycle-card__phase-ico .home-panel-icon svg,
+.home-layout--reference .home-cycle-card__phase-ico svg {
+  width: 11px !important;
+  height: 11px !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-lab {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--dash-ink) !important;
+  transition: color 0.4s ease;
+}
+
+/* Phase chips — exact match to calendar legend dots / cells */
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Period"] .home-cycle-card__phase-ico {
+  background: var(--ayla-period);
+  color: #fff;
+  border: none;
+  box-shadow: 0 1px 2px rgba(255, 107, 129, 0.35);
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Follicular"] .home-cycle-card__phase-ico {
+  background: var(--ayla-follicular);
+  color: #333;
+  border: none;
+  box-shadow: 0 1px 2px rgba(246, 195, 107, 0.35);
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Ovulation"] .home-cycle-card__phase-ico {
+  background: #fff;
+  color: #333;
+  border: 2px solid var(--ayla-ovulation);
+  box-shadow: none;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Luteal"] .home-cycle-card__phase-ico {
+  background: var(--ayla-luteal);
+  color: #333;
+  border: none;
+  box-shadow: 0 1px 2px rgba(185, 156, 255, 0.35);
+}
+
+/* Active phase — full calendar color on pill (slides via transition when phase changes) */
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Period"].is-current {
+  background: var(--ayla-period) !important;
+  border: 1px solid var(--ayla-period) !important;
+  box-shadow: 0 2px 8px rgba(255, 107, 129, 0.28) !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Period"].is-current .home-cycle-card__phase-ico {
+  background: rgba(255, 255, 255, 0.28) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Period"].is-current .home-cycle-card__phase-lab {
+  color: #fff !important;
+  font-weight: 600 !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Follicular"].is-current {
+  background: var(--ayla-follicular) !important;
+  border: 1px solid var(--ayla-follicular) !important;
+  box-shadow: 0 2px 8px rgba(246, 195, 107, 0.28) !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Follicular"].is-current .home-cycle-card__phase-ico {
+  background: rgba(255, 255, 255, 0.35) !important;
+  color: #333 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Follicular"].is-current .home-cycle-card__phase-lab {
+  color: #333 !important;
+  font-weight: 600 !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Ovulation"].is-current {
+  background: #fff !important;
+  border: 2px solid var(--ayla-ovulation) !important;
+  box-shadow: 0 2px 8px rgba(142, 99, 255, 0.22) !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Ovulation"].is-current .home-cycle-card__phase-ico {
+  background: #fff !important;
+  color: #333 !important;
+  border: 2px solid var(--ayla-ovulation) !important;
+  box-shadow: none !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Ovulation"].is-current .home-cycle-card__phase-lab {
+  color: #333 !important;
+  font-weight: 600 !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Luteal"].is-current {
+  background: var(--ayla-luteal) !important;
+  border: 1px solid var(--ayla-luteal) !important;
+  box-shadow: 0 2px 8px rgba(185, 156, 255, 0.28) !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Luteal"].is-current .home-cycle-card__phase-ico {
+  background: rgba(255, 255, 255, 0.35) !important;
+  color: #333 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Luteal"].is-current .home-cycle-card__phase-lab {
+  color: #333 !important;
+  font-weight: 600 !important;
+}
+
+/* Inactive — white pill, legend-colored dot only */
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Period"]:not(.is-current) {
+  border: 1px solid rgba(72, 42, 56, 0.1) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Follicular"]:not(.is-current) {
+  border: 1px solid rgba(72, 42, 56, 0.1) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Ovulation"]:not(.is-current) {
+  border: 1px solid rgba(72, 42, 56, 0.1) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-chip[data-strip-phase="Luteal"]:not(.is-current) {
+  border: 1px solid rgba(72, 42, 56, 0.1) !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.home-layout--reference .home-cycle-card__phase-arrow {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  padding: 0;
+  margin: 0;
+  width: 12px;
+  font-size: 0;
+  line-height: 0;
+  opacity: 1;
+  user-select: none;
+}
+
+.home-layout--reference .home-cycle-card__phase-sep {
+  display: none !important;
+}
+
+.home-layout--reference .home-cycle-card__bar {
+  width: 100%;
+  height: 12px;
+  margin: 0 !important;
+  background: var(--dash-bar-track);
+  border-radius: 999px;
+  overflow: hidden;
+  align-self: stretch;
+  box-shadow: inset 0 1px 2px rgba(72, 42, 56, 0.06);
+}
+
+.home-layout--reference .home-cycle-card__bar-fill {
+  height: 100%;
+  background: var(--ayla-period) !important;
+  border-radius: 999px;
+  transition:
+    width 0.45s ease,
+    background 0.4s ease;
+}
+
+.home-layout--reference #homeCycleCard[data-phase="period"] .home-cycle-card__bar-fill {
+  background: var(--ayla-period) !important;
+}
+
+.home-layout--reference #homeCycleCard[data-phase="follicular"] .home-cycle-card__bar-fill {
+  background: var(--ayla-follicular) !important;
+}
+
+.home-layout--reference #homeCycleCard[data-phase="ovulation"] .home-cycle-card__bar-fill {
+  background: var(--ayla-ovulation) !important;
+}
+
+.home-layout--reference #homeCycleCard[data-phase="luteal"] .home-cycle-card__bar-fill {
+  background: var(--ayla-luteal) !important;
+}
+
+.home-layout--reference .home-cycle-card__predict,
+.home-layout--reference .home-hero-forecast {
+  flex: 0 0 auto;
+  width: 100%;
+  margin: 0 !important;
+  padding: 0;
+  border-top: none;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--center-gap-xs);
+}
+
+.home-layout--reference .home-cycle-card__predict-label {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--dash-muted);
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.home-layout--reference .home-cycle-card__predict-line {
+  font-size: clamp(1.45rem, 1.8vw + 0.65rem, 1.65rem);
+  font-weight: 600;
+  font-family: var(--font-display);
+  color: var(--dash-ink);
+  margin: 0;
+  padding: 0;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-align: center;
+  width: 100%;
+}
+
+.home-layout--reference .home-cycle-card__predict-conf {
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--dash-muted);
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.home-layout--reference .home-cycle-card__predict-conf:not([hidden]) {
+  display: block;
+}
+
+/* Override global CTA row rules — stacked primary + secondary link */
+.home-layout--reference .home-cycle-card__ctas .btn {
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
+@media (max-width: 480px) {
+  .home-layout--reference .home-cycle-card--hero {
+    padding: 24px 20px 28px !important;
+  }
+
+  .home-layout--reference .home-cycle-card__ctas {
+    flex-wrap: wrap !important;
+    max-width: 100%;
+  }
+
+  .home-layout--reference .home-cycle-card__cta-primary,
+  .home-layout--reference .home-cycle-card__cta-secondary {
+    flex: 1 1 100% !important;
+    white-space: normal;
+  }
+
+  .home-layout--reference .home-cycle-card__phase-timeline {
+    gap: 8px 10px;
+  }
+}
+
+/* ═══════════════════════════════════════
+   RIGHT — today + quick log (assists)
+   ═══════════════════════════════════════ */
+
+.home-layout--reference .home-layout__col--right.home-right-panel,
+.home-layout--reference .home-right-panel--premium {
+  padding: 18px 0 0 !important;
+}
+
+.home-layout--reference .home-right-panel__balance {
+  display: none !important;
+}
+
+.home-layout--reference .home-snap--today {
+  flex: 0 0 auto;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.home-layout--reference .home-right-panel__title {
+  font-family: var(--font) !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  margin: 0 0 12px !important;
+  color: var(--dash-ink);
+  line-height: 1.15;
+}
+
+.home-layout--reference .home-today-card--metrics {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+  padding: 0 !important;
+  margin: 0 0 12px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.home-layout--reference .home-metric {
+  display: grid !important;
+  grid-template-columns: var(--dash-icon) 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px !important;
+  row-gap: 2px !important;
+  align-items: center;
+  padding: 12px 13px !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: var(--dash-shadow-soft) !important;
+  border: none !important;
+  min-height: 0 !important;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-layout--reference .home-metric--wide {
+  grid-column: 1 / -1;
+}
+
+.home-layout--reference .home-metric .home-icon-wrap,
+.home-layout--reference .home-metric__icon {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  width: var(--dash-icon) !important;
+  height: var(--dash-icon) !important;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-layout--reference .home-metric__lab {
+  grid-column: 2;
+  grid-row: 1;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--dash-muted) !important;
+  margin: 0;
+}
+
+.home-layout--reference .home-metric__val {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--dash-ink) !important;
+  margin: 0;
+  white-space: normal !important;
+  overflow: visible !important;
+}
+
+.home-layout--reference .home-panel-icon svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.home-layout--reference .home-panel-icon svg,
+.home-layout--reference .home-icon-wrap svg {
+  stroke-width: 1.5;
+}
+
+.home-layout--reference .home-quicklog--panel {
+  flex: 0 0 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: visible;
+  margin: 12px 0 0 !important;
+  padding: 0 !important;
+}
+
+.home-layout--reference .home-quicklog__title {
+  font-family: var(--font) !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  margin: 0 0 6px !important;
+  flex: 0 0 auto;
+  color: var(--dash-ink);
+}
+
+.home-layout--reference .home-quicklog__intro {
+  flex: 0 0 auto;
+  margin: 0 0 10px;
+  max-width: 240px;
+}
+
+.home-layout--reference .home-quicklog__intro-lead {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dash-ink);
+  margin: 0 0 4px;
+  line-height: 1.45;
+}
+
+.home-layout--reference .home-quicklog__intro-sub {
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--dash-muted);
+  margin: 0;
+  max-width: 240px;
+}
+
+.home-layout--reference .home-quicklog__intro-title,
+.home-layout--reference .home-quicklog__cta,
+.home-layout--reference #homeQuicklogPrimaryCta {
+  display: none !important;
+}
+
+.home-layout--reference .home-quicklog__grid {
+  flex: 0 0 auto;
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 12px !important;
+  margin: 0;
+}
+
+.home-layout--reference .home-quicklog__action {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 76px !important;
+  min-height: 76px !important;
+  max-height: 76px !important;
+  width: auto !important;
+  padding: 8px 6px !important;
+  border-radius: 16px !important;
+  background: #fff !important;
+  border: 1px solid rgba(72, 42, 56, 0.05) !important;
+  box-shadow: var(--dash-shadow-soft) !important;
+  gap: 5px !important;
+  box-sizing: border-box !important;
+  cursor: pointer;
+}
+
+.home-layout--reference .home-quicklog__action .home-icon-wrap {
+  width: var(--dash-icon) !important;
+  height: var(--dash-icon) !important;
+  border-radius: 50% !important;
+  background: rgba(234, 90, 144, 0.08) !important;
+  border: none !important;
+  box-shadow: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-layout--reference .home-quicklog__action-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dash-muted);
+}
+
+/* ── Kill legacy dashboard home overrides ─────────────────── */
+
+.home-dash .home-layout--master .home-layout__col--right.home-right-panel.home-right-panel--premium {
+  padding-bottom: 0 !important;
+}
+
+.home-dash .home-layout--reference .home-cycle-card--hero {
+  padding: 32px 40px 36px !important;
+}
+
+/* Kill legacy scroll / footer reserve inside reference layout */
+.home-dash .home-layout--reference .home-layout__col--right,
+.home-dash .home-layout--master.home-layout--reference .home-layout__col--right.home-right-panel--premium {
+  padding-bottom: 0 !important;
+  overflow: hidden !important;
+}
+
+.home-dash .home-layout--reference .home-snap--today,
+.home-dash .home-layout--reference .home-quicklog--panel,
+.home-dash .home-layout--reference .home-today-card--metrics {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.home-dash .app-view--home.app-view--mf {
+  overflow: hidden !important;
+}
+
+/* ── Compact viewport scaling (no clip) ─────────────────────── */
+
+@media (min-width: 1180px) and (min-height: 960px) {
+  .home-layout--reference .home-layout__col--left.home-sidebar {
+    --left-toggle-clearance: 42px;
+    --left-guidance-h: 156px;
+    --left-guidance-pad: 17px;
+    --left-guidance-item-gap: 6px;
+    --left-guidance-cal-gap: 22px;
+    --left-stack-gap: 0;
+    --left-section-gap: 11px;
+    --left-cal-cell-max: 36px;
+    --left-cal-gap: 6px;
+    --left-cal-pad-bottom: 18px;
+    --left-sidebar-pad-bottom: 18px;
+  }
+}
+
+@media (min-width: 1180px) and (min-height: 920px) {
+  :root {
+    --dash-cell: 40px;
+    --dash-cal-gap: 8px;
+    --dash-pad: 22px;
+  }
+
+  .home-layout--reference .home-quicklog__action {
+    height: 82px !important;
+    min-height: 82px !important;
+    max-height: 82px !important;
+  }
+}
+
+@media (min-width: 1180px) and (max-height: 900px) {
+  :root {
+    --dash-section-gap: 22px;
+    --dash-cell: 32px;
+    --dash-pad: 16px;
+    --dash-icon: 28px;
+  }
+
+  .home-layout--reference .home-layout__col--left.home-sidebar {
+    --left-toggle-clearance: 36px;
+    --left-guidance-h: 124px;
+    --left-guidance-pad: 14px;
+    --left-guidance-item-gap: 6px;
+    --left-guidance-cal-gap: 18px;
+    --left-stack-gap: 0;
+    --left-section-gap: 8px;
+    --left-cal-header-gap: 5px;
+    --left-cal-cell-max: 30px;
+    --left-cal-gap: 4px;
+    --left-cal-pad-bottom: 14px;
+    --left-legend-gap: 6px;
+    --left-sidebar-pad-y: 12px;
+    --left-sidebar-pad-bottom: 14px;
+  }
+
+  .home-layout--reference .home-mini-cal__head {
+    min-height: 22px;
+    margin-bottom: 3px;
+  }
+
+  .home-layout--reference .home-mini-cal__weekdays {
+    margin-bottom: 3px;
+    font-size: 10px;
+  }
+
+  .home-layout--reference .home-mini-cal__nav {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+  }
+
+  .home-layout--reference .home-mini-cal__title {
+    font-size: 15px;
+  }
+
+  .home-layout--reference .home-mini-cal__legend-label {
+    font-size: 12px;
+  }
+
+  .home-layout--reference .home-cycle-card__title {
+    font-size: 52px !important;
+  }
+
+  .home-layout--reference .home-cycle-card--hero {
+    padding: 32px 36px !important;
+  }
+
+  .home-layout--reference .home-quicklog__action {
+    height: 72px !important;
+    min-height: 72px !important;
+    max-height: 72px !important;
+  }
+
+  .home-layout--reference .home-orb-panel--hero.home-orb-panel--centered {
+    max-width: 260px;
+    padding: 12px 16px;
+  }
+
+  .home-layout--reference .home-orb-panel--centered .home-viz-wrap--compact,
+  .home-layout--reference .home-orb-panel--centered .home-viz-wrap--compact .wellness-viz--homehero,
+  .home-layout--reference .home-orb-panel--centered .home-viz-wrap--compact .wellness-viz__stage {
+    width: 64px;
+    height: 64px;
+  }
+
+  .home-layout--reference .home-quicklog--panel {
+    margin-top: 16px !important;
+  }
+}
+
+@media (max-width: 1179px) {
+  html:has(.home-dash) {
+    height: auto;
+    overflow: auto;
+  }
+
+  .home-dash {
+    height: auto;
+    overflow: auto !important;
+  }
+
+  .home-layout.home-layout--reference {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 16px 20px 24px !important;
+  }
+
+  .home-layout--reference .home-layout__col--left.home-sidebar {
+    position: fixed;
+    top: var(--dash-nav-h);
+    bottom: var(--dash-footer-h);
+    left: 0;
+    z-index: 200;
+    width: min(320px, 92vw) !important;
+    max-width: min(320px, 92vw) !important;
+    min-width: 0 !important;
+    height: auto;
+    max-height: none;
+    margin: 0;
+    padding: 20px 18px 24px !important;
+    border-radius: 0;
+    background: var(--dash-shell) !important;
+    border: none;
+    transform: translateX(-100%);
+    transition: transform 0.35s ease;
+  }
+
+  .home-sidebar.is-sidebar-open {
+    transform: translateX(0);
+  }
+
+  .home-sidebar.is-sidebar-collapsed .home-sidebar__collapsed-nav {
+    display: none !important;
+  }
+
+  .home-sidebar.is-sidebar-collapsed .home-sidebar__expandable {
+    max-height: 4000px;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    flex: 1 1 auto;
+  }
+
+  .home-sidebar:not(.is-sidebar-open) .home-sidebar__expandable {
+    max-height: 4000px;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .home-layout--reference .home-layout__col--right {
+    background: transparent;
+    padding: 0 !important;
+    margin-bottom: 20px;
+  }
+}

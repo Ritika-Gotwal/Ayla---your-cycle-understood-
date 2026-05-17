@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Ayla">
+  <circle cx="24" cy="24" r="18.4" fill="none" stroke="#C45A6A" stroke-width="1.35" stroke-linecap="round" stroke-opacity="0.55" stroke-dasharray="63 37" stroke-dashoffset="4" transform="rotate(-18 24 24)"/>
+  <g fill="#D9A7B8">
+    <path d="M24 10.4C15.3 12.3 10.8 19.1 11.5 25.8C12.1 30.8 16.8 34.6 24 35.8C31.2 34.6 35.9 30.8 36.5 25.8C37.2 19.1 32.7 12.3 24 10.4Z"/>
+    <path d="M24 10.4C15.3 12.3 10.8 19.1 11.5 25.8C12.1 30.8 16.8 34.6 24 35.8C31.2 34.6 35.9 30.8 36.5 25.8C37.2 19.1 32.7 12.3 24 10.4Z" transform="rotate(120 24 24)"/>
+    <path d="M24 10.4C15.3 12.3 10.8 19.1 11.5 25.8C12.1 30.8 16.8 34.6 24 35.8C31.2 34.6 35.9 30.8 36.5 25.8C37.2 19.1 32.7 12.3 24 10.4Z" transform="rotate(240 24 24)"/>
+  </g>
+  <circle cx="24" cy="24" r="3.6" fill="#7A0026"/>
+</svg>

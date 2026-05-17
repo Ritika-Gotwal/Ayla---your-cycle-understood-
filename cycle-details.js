@@ -60,6 +60,7 @@ function emptyUserData() {
       periodStartISO: null,
       periodDuration: 5,
     },
+    onboardingComplete: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -74,6 +75,7 @@ function loadUserData(username) {
   if (!data.cyclePrefs) data.cyclePrefs = { cycleLength: 28, periodStartISO: null, periodDuration: 5 };
   if (!data.cyclePrefs.cycleLength) data.cyclePrefs.cycleLength = 28;
   if (!data.cyclePrefs.periodDuration) data.cyclePrefs.periodDuration = 5;
+  if (!("onboardingComplete" in data)) data.onboardingComplete = true;
   return data;
 }
 
@@ -228,7 +230,7 @@ function renderRingLarge(svg, info) {
     cy,
     r,
     fill: "none",
-    stroke: "rgba(0,0,0,.06)",
+    stroke: "rgba(239,127,168,.08)",
     "stroke-width": String(strokeW),
   });
 
@@ -254,7 +256,7 @@ function renderRingLarge(svg, info) {
       cy: pt.y,
       r: "6.2",
       fill: phaseAccentVar(info.phase),
-      stroke: "rgba(255,255,255,.92)",
+      stroke: "rgba(253,245,248,.92)",
       "stroke-width": "2.2",
       opacity: info.day ? "1" : "0.55",
     });
@@ -295,7 +297,7 @@ function renderWaveLarge(svg, info, { onHover } = {}) {
   const base = svgEl("path", {
     d: `M ${padX} ${(H - padY).toFixed(2)} L ${(W - padX).toFixed(2)} ${(H - padY).toFixed(2)}`,
     fill: "none",
-    stroke: "rgba(0,0,0,.08)",
+    stroke: "rgba(239,127,168,.09)",
     "stroke-width": "1.6",
   });
 
@@ -320,7 +322,7 @@ function renderWaveLarge(svg, info, { onHover } = {}) {
       cy: y,
       r: "6.2",
       fill: phaseAccentVar(info.phase),
-      stroke: "rgba(255,255,255,.92)",
+      stroke: "rgba(253,245,248,.92)",
       "stroke-width": "2.2",
       opacity: info.day ? "1" : "0.55",
     });

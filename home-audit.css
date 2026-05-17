@@ -1,0 +1,266 @@
+/* Homepage UX audit — hierarchy, spacing, phase colors */
+
+.topbar__inner--dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2, 16px);
+  min-height: var(--dash-topbar-h, 68px);
+  padding: 8px 16px;
+}
+.topbar__inner--dashboard .topbar__brand {
+  justify-self: start;
+}
+.topbar__inner--dashboard .app-nav {
+  justify-self: center;
+}
+.topbar__utilities {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.topbar__utility-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.88);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.22s ease, transform 0.2s ease;
+}
+.topbar__utility-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+.topbar__utility-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f0a8bc;
+  box-shadow: 0 0 0 2px rgba(40, 36, 38, 0.9);
+}
+
+.page--dashboard > .app-footer {
+  min-height: var(--dash-footer-h, 56px);
+  padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+  background: linear-gradient(0deg, rgba(42, 38, 40, 0.9), rgba(46, 42, 44, 0.86)) !important;
+  color: rgba(255, 255, 255, 0.35) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+.page--dashboard > .app-footer .app-footer__tagline {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.3);
+}
+.page--dashboard > .app-footer .app-footer__link {
+  font-size: 13px;
+  opacity: 0.5;
+}
+
+.home-mf__header--hero {
+  margin: 0 0 var(--space-2, 16px);
+  padding: 0;
+}
+.home-mf__header--hero .home-mf__whisper {
+  max-width: 42ch;
+}
+
+.home-cycle-card--hero {
+  box-shadow: var(--shadow-hero);
+}
+
+.home-cycle-card__support {
+  margin: var(--space-2, 16px) 0 0;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: rgba(22, 22, 22, 0.52);
+  max-width: 36ch;
+}
+.home-cycle-card__support:empty {
+  display: none;
+  margin: 0;
+}
+
+#homeCycleCard[data-phase="period"] .home-cycle-card__bar-fill {
+  background: linear-gradient(90deg, var(--ayla-period), color-mix(in srgb, var(--ayla-period) 65%, #fff));
+}
+#homeCycleCard[data-phase="follicular"] .home-cycle-card__bar-fill {
+  background: linear-gradient(90deg, var(--ayla-follicular), color-mix(in srgb, var(--ayla-follicular) 65%, #fff));
+}
+#homeCycleCard[data-phase="ovulation"] .home-cycle-card__bar-fill {
+  background: linear-gradient(90deg, var(--ayla-ovulation), color-mix(in srgb, var(--ayla-ovulation) 55%, #fff));
+}
+#homeCycleCard[data-phase="luteal"] .home-cycle-card__bar-fill {
+  background: linear-gradient(90deg, var(--ayla-luteal), color-mix(in srgb, var(--ayla-luteal) 60%, #fff));
+}
+
+.home-today-card--compact {
+  padding: var(--space-2, 16px);
+  border-radius: 16px;
+  box-shadow: var(--shadow-surface);
+  background: rgba(255, 255, 255, 0.72);
+}
+.home-today-card--compact .home-today-card__kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-weight: 600;
+  color: rgba(22, 22, 22, 0.55);
+}
+.home-today-card--compact .home-today-card__item {
+  margin: 4px 0;
+  gap: 8px;
+}
+.home-today-card--compact .home-today-card__bullet {
+  color: rgba(var(--plum-rgb), 0.55);
+  font-weight: 700;
+}
+
+.home-cal-panel--rail {
+  margin-top: var(--space-2, 16px);
+}
+.home-mini-cal--rail {
+  margin-top: var(--space-2, 16px);
+  padding: var(--space-2, 16px) 12px 12px;
+}
+.home-mini-cal--rail .home-mini-cal__cell {
+  min-height: 36px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+.home-mini-cal--rail .home-mini-cal__grid {
+  gap: 6px;
+}
+.home-mini-cal--rail .home-mini-cal__cell.sig-period,
+.home-mini-cal--rail .home-mini-cal__cell[data-phaseviz="period"] {
+  background: rgba(232, 164, 178, 0.35);
+  border-color: rgba(214, 120, 140, 0.28);
+}
+.home-mini-cal--rail .home-mini-cal__cell.sig-pred:not(.sig-period) {
+  background: rgba(244, 212, 180, 0.28);
+  border-style: dashed;
+}
+.home-mini-cal--rail .home-mini-cal__cell.sig-ovu:not(.sig-period) {
+  box-shadow: 0 0 0 2px var(--phase-lavender);
+  background: rgba(255, 255, 255, 0.55);
+}
+.home-mini-cal--rail .home-mini-cal__cell.sig-fertile:not(.sig-period) {
+  background: rgba(212, 192, 236, 0.28);
+}
+.home-mini-cal--rail .home-mini-cal__cell.is-today {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8), 0 0 0 3px rgba(var(--plum-rgb), 0.55);
+}
+.home-mini-cal--rail .home-mini-cal__legend {
+  margin-top: var(--space-2, 16px);
+}
+
+.home-today-sheet {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2, 16px);
+  padding: var(--space-2, 16px);
+  margin-top: var(--space-2, 16px);
+}
+.home-today-sheet__row {
+  display: contents;
+}
+.home-today-sheet__rule,
+.home-today-sheet__sep {
+  display: none;
+}
+.home-today-cell--wide {
+  grid-column: 1 / -1;
+}
+.home-today-cell__val {
+  font-size: clamp(17px, 1.6vw, 20px);
+}
+
+.home-right-panel {
+  gap: var(--space-3, 24px);
+}
+.home-quicklog--panel .home-quicklog__guide {
+  margin-bottom: var(--space-2, 16px);
+}
+
+@media (min-width: 1180px) {
+  .home-layout--master {
+    grid-template-columns: minmax(0, 0.22fr) minmax(0, 0.56fr) minmax(0, 0.22fr);
+    gap: var(--space-3, 24px);
+  }
+  .home-layout--master .home-layout__col--center {
+    gap: var(--space-2, 16px);
+  }
+  .home-layout--master .home-cycle-card--hero {
+    padding: var(--space-4, 32px);
+    border-radius: 28px;
+  }
+  .home-layout--master .home-cycle-card__title {
+    font-size: clamp(44px, 4.2vw, 52px);
+    line-height: 1.05;
+  }
+  .home-layout--master #homeCycleKicker {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .home-layout--master .home-cycle-card__ctas {
+    gap: var(--space-2, 16px);
+    margin-top: var(--space-2, 16px);
+  }
+  .home-layout--master .home-hero-main {
+    flex: 1 1 70%;
+    min-width: 0;
+  }
+  .home-layout--master .home-orb-panel--hero {
+    flex: 0 0 min(160px, 28%);
+  }
+  .home-layout--master .home-layout__col--right.home-right-panel:not(.home-right-panel--premium) {
+    gap: var(--space-3, 24px);
+    padding-bottom: calc(var(--dash-footer-h, 56px) + var(--space-4, 32px));
+  }
+  .home-layout--master .home-layout__col--right.home-right-panel:not(.home-right-panel--premium) .home-snap--today,
+  .home-layout--master .home-layout__col--right.home-right-panel:not(.home-right-panel--premium) .home-quicklog--panel {
+    flex: 1 1 45%;
+  }
+  .home-layout--master .home-layout__col--right.home-right-panel--premium .home-snap--today,
+  .home-layout--master .home-layout__col--right.home-right-panel--premium .home-quicklog--panel {
+    flex: 0 0 auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .home-layout--master .home-quicklog--panel .home-quicklog__dock {
+    box-shadow: var(--shadow-action);
+  }
+}
+
+@media (max-width: 1179px) {
+  .topbar__inner--dashboard {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "brand utils"
+      "nav nav";
+  }
+  .topbar__inner--dashboard .topbar__brand {
+    grid-area: brand;
+  }
+  .topbar__inner--dashboard .app-nav {
+    grid-area: nav;
+    justify-self: stretch;
+    justify-content: center;
+  }
+  .topbar__utilities {
+    grid-area: utils;
+  }
+}

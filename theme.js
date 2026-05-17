@@ -1,53 +1,39 @@
-/* Ayla — Theme switcher (shared) */
+/* Ayla — Deep pink wellness theme */
 
 const AYLA_THEME_KEY = "aylaTheme";
-const DEFAULT_THEME = "theme-blush-pro";
-const AYLA_THEME_CLASSES = [
-  "theme-blush-pro",
-  "theme-lavender-pro",
-  "theme-peach-pro",
-  "theme-moon-pro",
-  "theme-berry-pro",
-  "theme-midnight-pro",
-];
+const DEFAULT_THEME = "theme-sakura-bloom";
+
+/** Legacy / prior theme ids → Sakura presets */
+const LEGACY_THEME_MAP = {
+  "theme-blush-pro": "theme-sakura-bloom",
+  "theme-lavender-pro": "theme-sakura-bloom",
+  "theme-peach-pro": "theme-sakura-bloom",
+  "theme-moon-pro": "theme-sakura-bloom",
+  "theme-berry-pro": "theme-sakura-bloom",
+  "theme-midnight-pro": "theme-sakura-bloom",
+  "theme-ayla-veil": "theme-sakura-bloom",
+  "theme-ayla-bloom": "theme-sakura-petal",
+};
+
+const AYLA_THEME_CLASSES = ["theme-sakura-bloom", "theme-sakura-petal"];
 
 const THEMES = [
   {
-    id: "theme-blush-pro",
-    name: "Blush Calm Pro",
-    swatches: ["#d8a7af", "#f8f1f2", "#ffffff"],
+    id: "theme-sakura-bloom",
+    name: "Deep Pink",
+    swatches: ["#7A0026", "#D9A7B8", "#F5E8EE"],
   },
   {
-    id: "theme-lavender-pro",
-    name: "Lavender Soft Pro",
-    swatches: ["#b8aee0", "#f3f1fa", "#ffffff"],
-  },
-  {
-    id: "theme-peach-pro",
-    name: "Peach Warm Pro",
-    swatches: ["#e6b29a", "#fbf3ee", "#ffffff"],
-  },
-  {
-    id: "theme-moon-pro",
-    name: "Moonlight Neutral Pro",
-    swatches: ["#d6d3d4", "#f4f2f3", "#ffffff"],
-  },
-  {
-    id: "theme-berry-pro",
-    name: "Berry Rose",
-    swatches: ["#c78692", "#f7eff1", "#ffffff"],
-  },
-  {
-    id: "theme-midnight-pro",
-    name: "Midnight Calm",
-    swatches: ["#1f1b1d", "#2a2426", "#d8a7af"],
+    id: "theme-sakura-petal",
+    name: "Bright Bloom",
+    swatches: ["#7A0026", "#C45A6A", "#FFEAEC"],
   },
 ];
 
 function applyAylaTheme(themeId, { persist = true } = {}) {
-  const id = AYLA_THEME_CLASSES.includes(themeId) ? themeId : DEFAULT_THEME;
+  const mapped = LEGACY_THEME_MAP[themeId] || themeId;
+  const id = AYLA_THEME_CLASSES.includes(mapped) ? mapped : DEFAULT_THEME;
 
-  // Keep existing body classes (e.g. page--no-scroll)
   for (const c of AYLA_THEME_CLASSES) document.body.classList.remove(c);
   document.body.classList.add(id);
 
@@ -55,27 +41,22 @@ function applyAylaTheme(themeId, { persist = true } = {}) {
 
   const themeBtn = document.getElementById("themeBtn");
   if (themeBtn) {
-    const isNight = id === "theme-midnight-pro";
-    themeBtn.classList.toggle("is-night", isNight);
-    themeBtn.setAttribute("aria-label", isNight ? "Choose light theme" : "Choose theme");
+    themeBtn.classList.remove("is-night");
+    themeBtn.setAttribute("aria-label", "Choose appearance");
   }
 
-  // Update UI selected state if present
-  const list = document.getElementById("themeList");
-  if (list) {
-    list.querySelectorAll("[data-theme]").forEach((el) => {
-      el.classList.toggle("is-selected", el.getAttribute("data-theme") === id);
-      el.setAttribute("aria-checked", String(el.getAttribute("data-theme") === id));
-    });
-  }
+  renderThemeList();
 }
 
 function renderThemeList() {
   const list = document.getElementById("themeList");
   if (!list) return;
+
   list.innerHTML = "";
 
-  const current = localStorage.getItem(AYLA_THEME_KEY) || DEFAULT_THEME;
+  const raw = localStorage.getItem(AYLA_THEME_KEY) || DEFAULT_THEME;
+  const current = LEGACY_THEME_MAP[raw] || raw;
+  const activeId = AYLA_THEME_CLASSES.includes(current) ? current : DEFAULT_THEME;
 
   THEMES.forEach((t) => {
     const btn = document.createElement("button");
@@ -83,7 +64,7 @@ function renderThemeList() {
     btn.className = "theme-option";
     btn.setAttribute("data-theme", t.id);
     btn.setAttribute("role", "radio");
-    btn.setAttribute("aria-checked", String(t.id === current));
+    btn.setAttribute("aria-checked", String(t.id === activeId));
 
     const left = document.createElement("div");
     left.className = "theme-option__left";
@@ -104,7 +85,7 @@ function renderThemeList() {
     name.textContent = t.name;
     const hint = document.createElement("div");
     hint.className = "micro subtle";
-    hint.textContent = t.id === DEFAULT_THEME ? "Default" : " ";
+    hint.textContent = t.id === DEFAULT_THEME ? "Default" : "Airy cards";
 
     meta.appendChild(name);
     meta.appendChild(hint);
@@ -122,14 +103,18 @@ function renderThemeList() {
     btn.addEventListener("click", () => applyAylaTheme(t.id));
     list.appendChild(btn);
   });
-
-  applyAylaTheme(current, { persist: false });
 }
 
 function initAylaTheme() {
-  const saved = localStorage.getItem(AYLA_THEME_KEY) || DEFAULT_THEME;
-  applyAylaTheme(saved, { persist: false });
-  renderThemeList();
+  const raw = localStorage.getItem(AYLA_THEME_KEY) || DEFAULT_THEME;
+  const normalized = LEGACY_THEME_MAP[raw] || raw;
+  const effective = AYLA_THEME_CLASSES.includes(normalized) ? normalized : DEFAULT_THEME;
+
+  if (effective !== raw) {
+    localStorage.setItem(AYLA_THEME_KEY, effective);
+  }
+
+  applyAylaTheme(effective, { persist: false });
 
   const themeBtn = document.getElementById("themeBtn");
   const themeModal = document.getElementById("themeModal");
@@ -150,11 +135,9 @@ function initAylaTheme() {
     themeBtn.addEventListener("click", () => {
       if (typeof themeModal.showModal === "function") themeModal.showModal();
       else themeModal.setAttribute("open", "open");
-      // Ensure fades are correct after open
       setTimeout(updateFade, 0);
     });
   }
 }
 
 initAylaTheme();
-

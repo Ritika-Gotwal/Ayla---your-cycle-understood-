@@ -15,37 +15,80 @@ function safeJSONParse(s, fallback) {
   }
 }
 
+function normalizeEmail(s) {
+  return String(s || "").trim().toLowerCase();
+}
+
+function isValidEmail(s) {
+  const v = normalizeEmail(s);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+
+function usernameKey(username) {
+  return String(username || "").trim().toLowerCase();
+}
+
+function userKey(u) {
+  if (!u) return "";
+  if (typeof u.email === "string" && u.email.trim()) return normalizeEmail(u.email);
+  return usernameKey(u.username);
+}
+
+/** Matches dashboard/cycle data keys in localStorage (legacy accounts keyed by username string). */
+function storageSessionKey(u) {
+  if (!u) return null;
+  if (typeof u.username === "string" && u.username.trim()) return String(u.username);
+  return userKey(u);
+}
+
 function loadUsers() {
   const raw = localStorage.getItem(LS.users);
   const parsed = safeJSONParse(raw || "[]", []);
 
-  // Migration: previously stored as { [username]: { password } }
   if (parsed && !Array.isArray(parsed) && typeof parsed === "object") {
     const migrated = Object.entries(parsed)
       .filter(([u, v]) => typeof u === "string" && v && typeof v.password === "string")
       .map(([u, v]) => ({ username: u, password: v.password }));
-    localStorage.setItem(LS.users, JSON.stringify(migrated));
-    return migrated;
+    const withEmail = migrated.map((row) => ({
+      ...row,
+      email: normalizeEmail(`${usernameKey(row.username)}@device.local`),
+    }));
+    localStorage.setItem(LS.users, JSON.stringify(withEmail));
+    return withEmail;
   }
 
   if (!Array.isArray(parsed)) return [];
 
   const cleaned = parsed
-    .filter((u) => u && typeof u.username === "string" && (typeof u.password === "string" || typeof u.passwordHash === "string"))
-    .map((u) => ({
-      fullName: typeof u.fullName === "string" ? u.fullName : undefined,
-      username: String(u.username),
-      password: typeof u.password === "string" ? String(u.password) : undefined, // legacy
-      passwordHash: typeof u.passwordHash === "string" ? String(u.passwordHash) : undefined,
-      passwordSalt: typeof u.passwordSalt === "string" ? String(u.passwordSalt) : undefined,
-      securityQuestionId: typeof u.securityQuestionId === "string" ? String(u.securityQuestionId) : undefined,
-      securityAnswerHash: typeof u.securityAnswerHash === "string" ? String(u.securityAnswerHash) : undefined,
-      securityAnswerSalt: typeof u.securityAnswerSalt === "string" ? String(u.securityAnswerSalt) : undefined,
-      recoveryPinHash: typeof u.recoveryPinHash === "string" ? String(u.recoveryPinHash) : undefined,
-      recoveryPinSalt: typeof u.recoveryPinSalt === "string" ? String(u.recoveryPinSalt) : undefined,
-    }));
+    .filter(
+      (u) =>
+        u &&
+        (typeof u.username === "string" || typeof u.email === "string") &&
+        (typeof u.password === "string" || typeof u.passwordHash === "string")
+    )
+    .map((u) => {
+      const username = typeof u.username === "string" ? String(u.username) : "";
+      const emailFrom =
+        typeof u.email === "string" && u.email.trim()
+          ? normalizeEmail(u.email)
+          : username
+            ? normalizeEmail(`${usernameKey(username)}@device.local`)
+            : "";
+      return {
+        fullName: typeof u.fullName === "string" ? u.fullName : undefined,
+        username: username || emailFrom.split("@")[0] || "user",
+        email: emailFrom,
+        password: typeof u.password === "string" ? String(u.password) : undefined,
+        passwordHash: typeof u.passwordHash === "string" ? String(u.passwordHash) : undefined,
+        passwordSalt: typeof u.passwordSalt === "string" ? String(u.passwordSalt) : undefined,
+        securityQuestionId: typeof u.securityQuestionId === "string" ? String(u.securityQuestionId) : undefined,
+        securityAnswerHash: typeof u.securityAnswerHash === "string" ? String(u.securityAnswerHash) : undefined,
+        securityAnswerSalt: typeof u.securityAnswerSalt === "string" ? String(u.securityAnswerSalt) : undefined,
+        recoveryPinHash: typeof u.recoveryPinHash === "string" ? String(u.recoveryPinHash) : undefined,
+        recoveryPinSalt: typeof u.recoveryPinSalt === "string" ? String(u.recoveryPinSalt) : undefined,
+      };
+    });
 
-  // Enforce "no email anywhere"
   localStorage.setItem(LS.users, JSON.stringify(cleaned));
   return cleaned;
 }
@@ -54,12 +97,42 @@ function saveUsers(users) {
   localStorage.setItem(LS.users, JSON.stringify(users));
 }
 
-function usernameKey(username) {
-  return String(username || "").trim().toLowerCase();
+/** Preferred display name — emotional personalization only (stored as fullName). */
+function normalizePreferredNameInput(s) {
+  return String(s || "")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
-function findUser(users, username) {
-  const key = usernameKey(username);
+function validatePreferredName(raw) {
+  const name = normalizePreferredNameInput(raw);
+  if (!name) return { ok: false, code: "empty" };
+  if (name.length > 80) return { ok: false, code: "long" };
+  try {
+    if (!/^[\p{L}\p{M}][\p{L}\p{M}\s'\-.]*$/u.test(name)) return { ok: false, code: "chars" };
+  } catch {
+    if (!/^[A-Za-zÀ-ž][A-Za-zÀ-ž\s'\-.]*$/.test(name)) return { ok: false, code: "chars" };
+  }
+  return { ok: true, value: name };
+}
+
+function preferredNameErrorMessage(code) {
+  const map = {
+    empty: "We’d love to know what to call you.",
+    long: "Could you use a slightly shorter name?",
+    chars: "Letters, spaces, and simple punctuation work best here.",
+  };
+  return map[code] || map.chars;
+}
+
+function findUserForLogin(users, rawInput) {
+  const raw = String(rawInput || "").trim();
+  if (!raw) return null;
+  if (raw.includes("@")) {
+    const key = normalizeEmail(raw);
+    return users.find((u) => normalizeEmail(u.email) === key) || null;
+  }
+  const key = usernameKey(raw);
   return users.find((u) => usernameKey(u.username) === key) || null;
 }
 
@@ -68,49 +141,40 @@ function loadLoggedInUser() {
   return u ? String(u) : null;
 }
 
-function saveLoggedInUser(username) {
-  localStorage.setItem(LS.loggedInUser, username);
+function saveLoggedInUser(key) {
+  localStorage.setItem(LS.loggedInUser, key);
 }
 
 // Elements
 const authForm = $$("#authForm");
-const authCard = $$(".auth__card");
-
 const tabLogin = $$("#tabLogin");
 const tabSignup = $$("#tabSignup");
-
-const fullNameField = $$("#fullNameField");
-const usernameField = $$("#usernameField");
-const passwordField = $$("#passwordField");
-
-const fullNameEl = $$("#fullName");
-const usernameEl = $$("#username");
+const authHeading = $$("#authHeading");
+const authSubtle = $$("#authSubtle");
+const preferredNameField = $$("#preferredNameField");
+const preferredNameEl = $$("#preferredName");
+const preferredNameError = $$("#preferredNameError");
+const emailEl = $$("#email");
 const passwordEl = $$("#password");
-
+const confirmPasswordField = $$("#confirmPasswordField");
+const confirmPasswordEl = $$("#confirmPassword");
+const confirmPasswordError = $$("#confirmPasswordError");
 const authSubmit = $$("#authSubmit");
 const authHint = $$("#authHint");
 const authError = $$("#authError");
 const authSuccess = $$("#authSuccess");
-
-const fullNameError = $$("#fullNameError");
-const usernameError = $$("#usernameError");
+const emailError = $$("#emailError");
 const passwordError = $$("#passwordError");
+const forgotRow = $$("#forgotRow");
 
 let authMsgTimer = null;
+let mode = "login";
 
-function applyFieldVisibility(wrapperEl, shouldShow) {
-  if (!wrapperEl) return;
-  if (shouldShow) {
-    wrapperEl.hidden = false;
-    wrapperEl.classList.remove("hidden");
-    wrapperEl.style.display = "";
-    wrapperEl.setAttribute("aria-hidden", "false");
-  } else {
-    wrapperEl.hidden = true;
-    wrapperEl.classList.add("hidden");
-    wrapperEl.style.display = "none";
-    wrapperEl.setAttribute("aria-hidden", "true");
-  }
+function applyFieldVisibility(el, show) {
+  if (!el) return;
+  el.hidden = !show;
+  el.style.display = show ? "" : "none";
+  el.setAttribute("aria-hidden", show ? "false" : "true");
 }
 
 function setFieldError(inputEl, errorEl, msg) {
@@ -136,9 +200,10 @@ function clearAuthMessages() {
   authSuccess.hidden = true;
   authSuccess.textContent = "";
 
-  clearFieldError(fullNameEl, fullNameError);
-  clearFieldError(usernameEl, usernameError);
+  clearFieldError(preferredNameEl, preferredNameError);
+  clearFieldError(emailEl, emailError);
   clearFieldError(passwordEl, passwordError);
+  clearFieldError(confirmPasswordEl, confirmPasswordError);
 }
 
 function showAuthMessage(type, msg) {
@@ -166,32 +231,14 @@ function showAuthSuccess(msg) {
   showAuthMessage("success", msg);
 }
 
-function normalizeFullNameInput(s) {
-  return String(s || "").trim();
-}
-
-function normalizeUsernameInput(s) {
-  return String(s || "").trim();
-}
-
 function normalizePasswordInput(s) {
   return String(s || "");
 }
 
-function normalizeAnswerInput(s) {
-  return String(s || "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .toLowerCase();
-}
-
 function stripPasswordSpaces(s) {
-  // Security-ish UX: prevent whitespace-only or leading/trailing spaces from being "real" password chars.
-  return String(s || "").replace(/\s+/g, " ").trim();
-}
-
-function hasTwoWords(fullName) {
-  return fullName.split(/\s+/).filter(Boolean).length >= 2;
+  return String(s || "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function hasUppercase(s) {
@@ -236,141 +283,131 @@ async function hashWithSalt(value, salt) {
 }
 
 function setAuthBusy(isBusy) {
-  // Keep the button visually interactive (no "blocked" cursor),
-  // while still preventing double-submits.
   authSubmit.classList.toggle("is-busy", isBusy);
   authSubmit.setAttribute("aria-busy", String(isBusy));
 }
 
-function withAuthBusy(fn) {
+function withAuthBusyAsync(fn) {
   setAuthBusy(true);
-  const done = () => setTimeout(() => setAuthBusy(false), 220);
-  try {
-    fn();
-  } finally {
-    done();
-  }
+  return (async () => {
+    try {
+      await fn();
+    } finally {
+      setTimeout(() => setAuthBusy(false), 220);
+    }
+  })();
 }
 
-async function withAuthBusyAsync(fn) {
-  setAuthBusy(true);
-  try {
-    await fn();
-  } finally {
-    setTimeout(() => setAuthBusy(false), 220);
-  }
-}
-
-function updateAuthButtonState(mode) {
-  // If a submit is in-flight, keep the enabled cursor/feel but block interaction via CSS.
+function updateAuthButtonState(currentMode) {
   if (authSubmit.classList.contains("is-busy")) return;
-  const u = normalizeUsernameInput(usernameEl.value);
+  const m = currentMode || mode;
+  const e = normalizeEmail(emailEl.value);
   const p = normalizePasswordInput(passwordEl.value);
-  if (mode === "login") {
-    authSubmit.disabled = !u || !p;
+  if (m === "login") {
+    authSubmit.disabled = !e || !p;
     return;
   }
-  const fn = normalizeFullNameInput(fullNameEl?.value);
-  const q = $$("#securityQuestion")?.value || "";
-  const a = $$("#securityAnswer")?.value || "";
-  const pin = getPINFromBoxes();
-  authSubmit.disabled = !fn || !u || !p || !q || !a.trim() || pin.length !== 4;
+  const nm = normalizePreferredNameInput(preferredNameEl?.value || "");
+  const c = normalizePasswordInput(confirmPasswordEl?.value || "");
+  authSubmit.disabled = !nm || !e || !p || !c;
 }
 
-function setAuthMode(mode) {
-  const isLogin = mode === "login";
-
-  authForm.classList.add("is-switching");
-  setTimeout(() => authForm.classList.remove("is-switching"), 140);
-
-  tabLogin.classList.toggle("is-active", isLogin);
-  tabSignup.classList.toggle("is-active", !isLogin);
-  tabLogin.setAttribute("aria-selected", String(isLogin));
-  tabSignup.setAttribute("aria-selected", String(!isLogin));
-
-  authSubmit.textContent = isLogin ? "Log in" : "Create account";
-  authHint.textContent = isLogin
-    ? "Private by design. Your cycle data stays on your device."
-    : "Create a private local account for this device.";
-
-  applyFieldVisibility(fullNameField, !isLogin);
-  applyFieldVisibility(usernameField, true);
-  applyFieldVisibility(passwordField, true);
-  applyFieldVisibility($$("#signupExtra"), !isLogin);
-  applyFieldVisibility($$("#forgotRow"), isLogin);
-
-  // Clear all inputs + messages on switch
-  if (fullNameEl) fullNameEl.value = "";
-  usernameEl.value = "";
-  passwordEl.value = "";
-  const securityQuestionEl = $$("#securityQuestion");
-  const securityAnswerEl = $$("#securityAnswer");
-  if (securityQuestionEl) securityQuestionEl.value = "";
-  if (securityAnswerEl) securityAnswerEl.value = "";
-  getPINBoxes().forEach((b) => (b.value = ""));
-  const signupFill = $$("#signupPwFill");
-  if (signupFill) signupFill.style.width = "0%";
-  $$("#pwTagLen")?.classList.remove("is-ok");
-  $$("#pwTagUpper")?.classList.remove("is-ok");
-  $$("#pwTagNum")?.classList.remove("is-ok");
-  clearAuthMessages();
-
-  usernameEl.placeholder = isLogin ? "Enter your username" : "Choose a unique username (min 3 characters)";
-  passwordEl.placeholder = isLogin ? "Enter your password" : "Create a password (min 8, uppercase + number)";
-  passwordEl.autocomplete = isLogin ? "current-password" : "new-password";
-
-  updateAuthButtonState(mode);
-
-  // Focus first visible field
-  (isLogin ? usernameEl : fullNameEl || usernameEl).focus();
-}
-
-// Input UX: clear errors on typing (no stacking)
-function onAuthInput(mode) {
+function onAuthInput() {
   authError.hidden = true;
   authError.textContent = "";
   authSuccess.hidden = true;
   authSuccess.textContent = "";
   clearTimeout(authMsgTimer);
   authMsgTimer = null;
+  updateAuthButtonState();
+}
+
+function setAuthMode(next, opts = {}) {
+  const preserveMessages = opts.preserveMessages === true;
+  mode = next === "signup" ? "signup" : "login";
+  const isLogin = mode === "login";
+
+  authForm.classList.add("is-switching");
+  setTimeout(() => authForm.classList.remove("is-switching"), 160);
+
+  tabLogin?.classList.toggle("is-active", isLogin);
+  tabSignup?.classList.toggle("is-active", !isLogin);
+  tabLogin?.setAttribute("aria-selected", String(isLogin));
+  tabSignup?.setAttribute("aria-selected", String(!isLogin));
+
+  if (authHeading) {
+    authHeading.textContent = isLogin ? "Welcome back" : "Create your account";
+  }
+  if (authSubtle) {
+    authSubtle.textContent = isLogin
+      ? "Sign in to your private space — calm, secure, and yours alone."
+      : "Start gently — one quiet step toward tracking that honors your body.";
+  }
+
+  authSubmit.textContent = isLogin ? "Log in" : "Create account";
+
+  if (authHint) {
+    authHint.textContent =
+      "Private by design — your cycle data stays on this device until you choose otherwise.";
+  }
+
+  applyFieldVisibility(forgotRow, isLogin);
+  applyFieldVisibility(preferredNameField, !isLogin);
+  applyFieldVisibility(confirmPasswordField, !isLogin);
+
+  passwordEl.autocomplete = isLogin ? "current-password" : "new-password";
+  passwordEl.placeholder = isLogin ? "Enter your password" : "Create a password";
+
+  if (preferredNameEl) preferredNameEl.value = "";
+  if (confirmPasswordEl) {
+    confirmPasswordEl.value = "";
+    confirmPasswordEl.autocomplete = "new-password";
+  }
+  passwordEl.value = "";
+
+  if (preserveMessages) {
+    clearFieldError(preferredNameEl, preferredNameError);
+    clearFieldError(emailEl, emailError);
+    clearFieldError(passwordEl, passwordError);
+    clearFieldError(confirmPasswordEl, confirmPasswordError);
+  } else {
+    clearAuthMessages();
+  }
+
   updateAuthButtonState(mode);
+  if (isLogin) emailEl?.focus();
+  else preferredNameEl?.focus();
 }
 
 function init() {
-  // If already logged in, go straight to dashboard
   const existing = loadLoggedInUser();
   if (existing) {
     window.location.href = "dashboard.html#home";
     return;
   }
 
-  let mode = "login";
-  setAuthMode(mode);
+  setAuthMode("login");
 
-  tabLogin.addEventListener("click", () => {
-    mode = "login";
-    setAuthMode(mode);
-  });
-  tabSignup.addEventListener("click", () => {
-    mode = "signup";
-    setAuthMode(mode);
-  });
+  tabLogin?.addEventListener("click", () => setAuthMode("login"));
+  tabSignup?.addEventListener("click", () => setAuthMode("signup"));
 
-  usernameEl.addEventListener("input", () => {
-    clearFieldError(usernameEl, usernameError);
-    onAuthInput(mode);
+  preferredNameEl?.addEventListener("input", () => {
+    clearFieldError(preferredNameEl, preferredNameError);
+    onAuthInput();
+  });
+  emailEl?.addEventListener("input", () => {
+    clearFieldError(emailEl, emailError);
+    onAuthInput();
   });
   passwordEl.addEventListener("input", () => {
     clearFieldError(passwordEl, passwordError);
-    updateSignupPasswordMeter();
-    onAuthInput(mode);
+    onAuthInput();
   });
-  fullNameEl?.addEventListener("input", () => {
-    clearFieldError(fullNameEl, fullNameError);
-    onAuthInput(mode);
+  confirmPasswordEl?.addEventListener("input", () => {
+    clearFieldError(confirmPasswordEl, confirmPasswordError);
+    onAuthInput();
   });
 
-  // Password show/hide
   const passwordToggle = $$("#passwordToggle");
   passwordToggle?.addEventListener("click", () => {
     const isShown = passwordEl.type === "text";
@@ -379,168 +416,127 @@ function init() {
     passwordToggle.setAttribute("aria-label", isShown ? "Show password" : "Hide password");
   });
 
-  // Signup security inputs
-  const securityQuestionEl = $$("#securityQuestion");
-  const securityAnswerEl = $$("#securityAnswer");
-  const securityQuestionError = $$("#securityQuestionError");
-  const securityAnswerError = $$("#securityAnswerError");
-  const recoveryPinError = $$("#recoveryPinError");
-  securityQuestionEl?.addEventListener("change", () => {
-    clearFieldError(securityQuestionEl, securityQuestionError);
-    onAuthInput(mode);
-  });
-  securityAnswerEl?.addEventListener("input", () => {
-    clearFieldError(securityAnswerEl, securityAnswerError);
-    onAuthInput(mode);
+  const confirmPasswordToggle = $$("#confirmPasswordToggle");
+  confirmPasswordToggle?.addEventListener("click", () => {
+    if (!confirmPasswordEl) return;
+    const isShown = confirmPasswordEl.type === "text";
+    confirmPasswordEl.type = isShown ? "password" : "text";
+    confirmPasswordToggle.setAttribute("aria-pressed", String(!isShown));
+    confirmPasswordToggle.setAttribute("aria-label", isShown ? "Show confirm password" : "Hide confirm password");
   });
 
-  // PIN inputs (signup + recovery modal will reuse behavior)
-  const pinBoxes = getPINBoxes();
-  pinBoxes.forEach((box, idx) => wirePINBox(box, idx, pinBoxes, () => onAuthInput(mode)));
-
-  // Forgot password modal
   initRecoveryModal();
 
   authForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearAuthMessages();
 
-    const username = normalizeUsernameInput(usernameEl.value);
+    const emailRaw = String(emailEl.value || "").trim();
     const passwordRaw = normalizePasswordInput(passwordEl.value);
+    const nameRawSignup = mode === "signup" ? normalizePreferredNameInput(preferredNameEl?.value || "") : "";
 
-    if (mode === "login") {
-      if (!username || !passwordRaw) {
-        usernameEl.classList.add("is-invalid");
-        passwordEl.classList.add("is-invalid");
-        return showAuthError("Please enter username and password");
+    if (!emailRaw || !passwordRaw || (mode === "signup" && !nameRawSignup)) {
+      if (!emailRaw) setFieldError(emailEl, emailError, "Please enter your email.");
+      if (!passwordRaw) setFieldError(passwordEl, passwordError, "Please enter your password.");
+      if (mode === "signup" && !nameRawSignup) {
+        setFieldError(preferredNameEl, preferredNameError, preferredNameErrorMessage("empty"));
+      }
+      return showAuthError(mode === "login" ? "Please enter your email and password." : "Please fill in all fields.");
+    }
+
+    if (!isValidEmail(emailRaw)) {
+      setFieldError(emailEl, emailError, "Please enter a valid email address.");
+      return showAuthError("Please enter a valid email address.");
+    }
+
+    if (mode === "signup") {
+      const nameCheck = validatePreferredName(preferredNameEl?.value || "");
+      if (!nameCheck.ok) {
+        setFieldError(preferredNameEl, preferredNameError, preferredNameErrorMessage(nameCheck.code));
+        return showAuthError(preferredNameErrorMessage(nameCheck.code));
+      }
+
+      const confirmRaw = normalizePasswordInput(confirmPasswordEl?.value || "");
+      if (!confirmRaw) {
+        setFieldError(confirmPasswordEl, confirmPasswordError, "Please confirm your password.");
+        return showAuthError("Please confirm your password.");
+      }
+
+      const pw = passwordMeetsRules(passwordRaw);
+      if (!pw.ok) {
+        setFieldError(passwordEl, passwordError, "Use 8+ characters with 1 uppercase letter and 1 number.");
+        return showAuthError("Please choose a stronger password.");
+      }
+
+      if (stripPasswordSpaces(confirmRaw) !== pw.value) {
+        setFieldError(confirmPasswordEl, confirmPasswordError, "Passwords don’t match.");
+        return showAuthError("Passwords don’t match.");
       }
 
       await withAuthBusyAsync(async () => {
         const users = loadUsers();
-        const u = findUser(users, username);
-        if (!u) {
-          usernameEl.classList.add("is-invalid");
-          passwordEl.classList.add("is-invalid");
-          return showAuthError("Invalid username or password");
+        if (findUserForLogin(users, emailRaw)) {
+          setFieldError(emailEl, emailError, "An account with this email already exists.");
+          return showAuthError("That email is already registered. Try logging in.");
         }
 
-        const password = stripPasswordSpaces(passwordRaw);
-        let ok = false;
-        if (typeof u.passwordHash === "string" && typeof u.passwordSalt === "string") {
-          const candidate = await hashWithSalt(password, u.passwordSalt);
-          ok = candidate === u.passwordHash;
-        } else if (typeof u.password === "string") {
-          ok = u.password === passwordRaw;
-        }
+        const normalized = normalizeEmail(emailRaw);
+        const passwordSalt = makeSalt();
+        const passwordHash = await hashWithSalt(pw.value, passwordSalt);
 
-        if (!ok) {
-          usernameEl.classList.add("is-invalid");
-          passwordEl.classList.add("is-invalid");
-          return showAuthError("Invalid username or password");
-        }
+        users.push({
+          username: normalized,
+          email: normalized,
+          fullName: nameCheck.value,
+          passwordHash,
+          passwordSalt,
+        });
+        saveUsers(users);
 
-        saveLoggedInUser(u.username);
-        window.location.href = "dashboard.html#home";
+        emailEl.value = normalized;
+        setAuthMode("login", { preserveMessages: true });
+        showAuthSuccess("You’re all set — sign in when you’re ready.");
       });
       return;
     }
 
-    // Sign up
-    const fullName = normalizeFullNameInput(fullNameEl?.value);
-    let ok = true;
-    const pw = passwordMeetsRules(passwordRaw);
-    const securityQuestionId = String(securityQuestionEl?.value || "");
-    const securityAnswer = normalizeAnswerInput(securityAnswerEl?.value || "");
-    const pin = getPINFromBoxes();
-
-    if (!fullName) {
-      setFieldError(fullNameEl, fullNameError, "Full name is required.");
-      ok = false;
-    } else if (!hasTwoWords(fullName)) {
-      setFieldError(fullNameEl, fullNameError, "Please enter your first and last name.");
-      ok = false;
-    }
-
-    if (!username) {
-      setFieldError(usernameEl, usernameError, "Username is required.");
-      ok = false;
-    } else if (username.length < 3) {
-      setFieldError(usernameEl, usernameError, "Username must be at least 3 characters.");
-      ok = false;
-    }
-
-    if (!pw.value) {
-      setFieldError(passwordEl, passwordError, "Password is required.");
-      ok = false;
-    } else if (!pw.ok) {
-      setFieldError(passwordEl, passwordError, "Use 8+ characters with 1 uppercase and 1 number.");
-      ok = false;
-    }
-
-    if (!securityQuestionId) {
-      setFieldError(securityQuestionEl, securityQuestionError, "Please choose a security question.");
-      ok = false;
-    }
-
-    if (!securityAnswer) {
-      setFieldError(securityAnswerEl, securityAnswerError, "Answer is required.");
-      ok = false;
-    }
-
-    if (pin.length !== 4) {
-      setFieldError(pinBoxes[0] || passwordEl, recoveryPinError, "Enter your 4-digit recovery passcode.");
-      ok = false;
-    }
-
-    if (!ok) return;
-
     await withAuthBusyAsync(async () => {
       const users = loadUsers();
-      if (findUser(users, username)) {
-        setFieldError(usernameEl, usernameError, "Username already exists. Please log in.");
-        return;
+      const u = findUserForLogin(users, emailRaw);
+      if (!u) {
+        emailEl.classList.add("is-invalid");
+        passwordEl.classList.add("is-invalid");
+        return showAuthError("We couldn’t find an account with those details.");
       }
 
-      const passwordSalt = makeSalt();
-      const passwordHash = await hashWithSalt(pw.value, passwordSalt);
-      const securityAnswerSalt = makeSalt();
-      const securityAnswerHash = await hashWithSalt(securityAnswer, securityAnswerSalt);
-      const recoveryPinSalt = makeSalt();
-      const recoveryPinHash = await hashWithSalt(pin, recoveryPinSalt);
+      const password = stripPasswordSpaces(passwordRaw);
+      let ok = false;
+      if (typeof u.passwordHash === "string" && typeof u.passwordSalt === "string") {
+        const candidate = await hashWithSalt(password, u.passwordSalt);
+        ok = candidate === u.passwordHash;
+      } else if (typeof u.password === "string") {
+        ok = u.password === passwordRaw;
+      }
 
-      users.push({
-        fullName,
-        username,
-        passwordHash,
-        passwordSalt,
-        securityQuestionId,
-        securityAnswerHash,
-        securityAnswerSalt,
-        recoveryPinHash,
-        recoveryPinSalt,
-      });
-      saveUsers(users);
+      if (!ok) {
+        emailEl.classList.add("is-invalid");
+        passwordEl.classList.add("is-invalid");
+        return showAuthError("We couldn’t find an account with those details.");
+      }
 
-      showAuthSuccess("Account created successfully. Please log in.");
-      mode = "login";
-      setAuthMode(mode);
-      usernameEl.value = username;
-      passwordEl.value = "";
-      passwordEl.focus();
+      saveLoggedInUser(storageSessionKey(u));
+      window.location.href = "dashboard.html#home";
     });
   });
+
+  setTimeout(() => emailEl?.focus(), 0);
 }
 
 init();
 
-// --- PIN helpers (shared) ---
+// --- PIN helpers (recovery modal) ---
 function getPINBoxes(root = document) {
-  return [$$('#recoveryPin1', root), $$('#recoveryPin2', root), $$('#recoveryPin3', root), $$('#recoveryPin4', root)].filter(Boolean);
-}
-
-function getPINFromBoxes(root = document) {
-  const boxes = getPINBoxes(root);
-  return boxes.map((b) => String(b.value || "").replace(/\D/g, "")).join("");
+  return [$$("#recoveryPin1", root), $$("#recoveryPin2", root), $$("#recoveryPin3", root), $$("#recoveryPin4", root)].filter(Boolean);
 }
 
 function wirePINBox(box, idx, boxes, onChange) {
@@ -559,7 +555,9 @@ function wirePINBox(box, idx, boxes, onChange) {
     if (e.key === "ArrowRight" && boxes[idx + 1]) boxes[idx + 1].focus();
   });
   box.addEventListener("paste", (e) => {
-    const text = String(e.clipboardData?.getData("text") || "").replace(/\D/g, "").slice(0, 4);
+    const text = String(e.clipboardData?.getData("text") || "")
+      .replace(/\D/g, "")
+      .slice(0, 4);
     if (!text) return;
     e.preventDefault();
     for (let i = 0; i < boxes.length; i++) boxes[i].value = text[i] || "";
@@ -567,26 +565,6 @@ function wirePINBox(box, idx, boxes, onChange) {
     const next = boxes.find((b) => !b.value) || boxes[boxes.length - 1];
     next?.focus();
   });
-}
-
-// --- Signup password meter ---
-function updateSignupPasswordMeter() {
-  const meter = $$("#signupPwMeter");
-  if (!meter || meter.hidden) return;
-
-  const fill = $$("#signupPwFill");
-  const tagLen = $$("#pwTagLen");
-  const tagUpper = $$("#pwTagUpper");
-  const tagNum = $$("#pwTagNum");
-
-  const pw = passwordMeetsRules(passwordEl.value);
-  const score = (pw.lenOk ? 1 : 0) + (pw.upperOk ? 1 : 0) + (pw.numOk ? 1 : 0);
-  const pct = [0, 34, 68, 100][score] || 0;
-
-  if (fill) fill.style.width = `${pct}%`;
-  tagLen?.classList.toggle("is-ok", pw.lenOk);
-  tagUpper?.classList.toggle("is-ok", pw.upperOk);
-  tagNum?.classList.toggle("is-ok", pw.numOk);
 }
 
 // --- Recovery modal system ---
@@ -611,16 +589,23 @@ function initRecoveryModal() {
 
   if (!link || !dlg || !body || !foot || !title || !subtitle) return;
 
-  let step = "username";
-  let verifiedUserKey = null; // normalized username key
+  let step = "email";
+  let verifiedUserKey = null;
   let lastFocus = null;
 
+  function normalizeAnswerInput(s) {
+    return String(s || "")
+      .trim()
+      .replace(/\s+/g, " ")
+      .toLowerCase();
+  }
+
   const focusablesSel = [
-    'a[href]',
-    'button:not([disabled])',
-    'input:not([disabled])',
-    'select:not([disabled])',
-    'textarea:not([disabled])',
+    "a[href]",
+    "button:not([disabled])",
+    "input:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
     '[tabindex]:not([tabindex="-1"])',
   ].join(",");
 
@@ -655,7 +640,7 @@ function initRecoveryModal() {
   }
 
   function resetState() {
-    step = "username";
+    step = "email";
     verifiedUserKey = null;
     body.innerHTML = "";
     foot.innerHTML = "";
@@ -677,7 +662,6 @@ function initRecoveryModal() {
     closeModal();
   });
   dlg.addEventListener("close", () => {
-    // If user clicked the native close button
     resetState();
   });
 
@@ -692,14 +676,14 @@ function initRecoveryModal() {
     body.innerHTML = "";
     foot.innerHTML = "";
 
-    if (step === "username") {
+    if (step === "email") {
       title.textContent = "Recover your account";
-      subtitle.textContent = "Enter your username to verify your identity.";
+      subtitle.textContent = "Enter the email for your account. Legacy usernames still work if you enter them without @.";
 
       body.innerHTML = `
         <label class="field">
-          <span class="field__label">Username</span>
-          <input class="field__input" id="recoverUsername" inputmode="text" autocomplete="username" placeholder="Enter your username" />
+          <span class="field__label">Email Address</span>
+          <input class="field__input" id="recoverEmail" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="Enter your email" />
           <p class="micro error field__error" id="recoverError" role="status" aria-live="polite" hidden></p>
         </label>
       `;
@@ -710,7 +694,7 @@ function initRecoveryModal() {
         <button class="btn btn--primary" type="button" id="recoverContinue">Continue</button>
       `;
 
-      const uEl = $$("#recoverUsername", body);
+      const uEl = $$("#recoverEmail", body);
       const err = $$("#recoverError", body);
       const btn = $$("#recoverContinue", foot);
 
@@ -719,10 +703,16 @@ function initRecoveryModal() {
       async function onContinue() {
         err.hidden = true;
         err.textContent = "";
-        const username = normalizeUsernameInput(uEl.value);
-        if (!username) {
+        const raw = String(uEl.value || "").trim();
+        if (!raw) {
           err.hidden = false;
-          err.textContent = "Please enter your username.";
+          err.textContent = "Please enter your email.";
+          shake(uEl);
+          return;
+        }
+        if (raw.includes("@") && !isValidEmail(raw)) {
+          err.hidden = false;
+          err.textContent = "Please enter a valid email address.";
           shake(uEl);
           return;
         }
@@ -730,14 +720,14 @@ function initRecoveryModal() {
         modalBusy(btn, true);
         try {
           const users = loadUsers();
-          const u = findUser(users, username);
+          const u = findUserForLogin(users, raw);
           if (!u) {
             err.hidden = false;
-            err.textContent = "No account found with this username.";
+            err.textContent = "No account found with those details.";
             shake(uEl);
             return;
           }
-          verifiedUserKey = usernameKey(u.username);
+          verifiedUserKey = storageSessionKey(u);
           step = "method";
           await render();
         } finally {
@@ -760,7 +750,7 @@ function initRecoveryModal() {
         <div class="recover-options" role="list">
           <button class="recover-option" type="button" id="optQuestion" role="listitem">
             <div class="recover-option__title">Security Question</div>
-            <div class="micro subtle">Answer the question you chose during signup.</div>
+            <div class="micro subtle">Answer the question you saved for account recovery.</div>
           </button>
           <button class="recover-option" type="button" id="optPin" role="listitem">
             <div class="recover-option__title">Recovery Passcode</div>
@@ -777,9 +767,9 @@ function initRecoveryModal() {
       `;
 
       $$("#recoverBack", foot)?.addEventListener("click", async () => {
-        step = "username";
+        step = "email";
         await render();
-        setTimeout(() => $$("#recoverUsername")?.focus(), 0);
+        setTimeout(() => $$("#recoverEmail")?.focus(), 0);
       });
       $$("#recoverCancel", foot)?.addEventListener("click", closeModal);
       $$("#optQuestion", body)?.addEventListener("click", async () => {
@@ -796,9 +786,9 @@ function initRecoveryModal() {
     }
 
     const users = loadUsers();
-    const u = users.find((x) => usernameKey(x.username) === verifiedUserKey) || null;
+    const u = users.find((x) => userKey(x) === verifiedUserKey) || null;
     if (!u) {
-      step = "username";
+      step = "email";
       return render();
     }
 
@@ -897,7 +887,7 @@ function initRecoveryModal() {
         <button class="btn btn--primary" type="button" id="recoverContinue">Continue</button>
       `;
 
-      const boxes = [$$('#pinRecover1', body), $$('#pinRecover2', body), $$('#pinRecover3', body), $$('#pinRecover4', body)].filter(Boolean);
+      const boxes = [$$("#pinRecover1", body), $$("#pinRecover2", body), $$("#pinRecover3", body), $$("#pinRecover4", body)].filter(Boolean);
       boxes.forEach((box, idx) => wirePINBox(box, idx, boxes, null));
 
       const err = $$("#recoverError", body);
@@ -1077,7 +1067,7 @@ function initRecoveryModal() {
           const passwordHash = await hashWithSalt(pw.value, passwordSalt);
 
           const nextUsers = loadUsers();
-          const idx = nextUsers.findIndex((x) => usernameKey(x.username) === verifiedUserKey);
+          const idx = nextUsers.findIndex((x) => storageSessionKey(x) === verifiedUserKey);
           if (idx === -1) return;
           nextUsers[idx] = {
             ...nextUsers[idx],
@@ -1119,10 +1109,9 @@ function initRecoveryModal() {
 
       $$("#returnToLogin", foot)?.addEventListener("click", () => {
         closeModal();
-        setTimeout(() => usernameEl.focus(), 0);
+        setTimeout(() => emailEl?.focus(), 0);
       });
       return;
     }
   }
 }
-
